@@ -1,0 +1,57 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+   
+    <br />
+    <div class="jumbotron">
+        <h1>Création d'un arrêt</h1>
+        <hr class="my-4">
+        {{ form_start(form)}}
+        <div class="row">
+            <div class="col">
+                {{form_row(form.DateIn, {'label': 'Date de début','attr' : {'placeholder': 'Date ...'}})}}
+            </div>
+            <div class="col">
+                {{form_row(form.DateOut, {'label': 'Date de fin','attr' : {'placeholder': 'Date ...'}})}}
+            </div>
+        </div>
+        {{form_row(form.employe, {'label': 'Employé'})}}
+        {{form_row(form.motif, {'label': 'Type'})}}
+        {{form_row(form.load)}}
+
+        </div>
+
+        {% if employe is defined %}
+            <div class="row">
+                <div class="col">
+                    <h3>Repartition</h3>
+                    <table class="table table-condensed">
+                        <tr>
+                            <th>100%</th>
+                            <th>50%</th>
+                            <th>Ø</th>
+                            <th>Carence</th>
+                        </tr>
+                        <tr>
+                            <td>{{ arret.rcent }}</td>
+                            <td>{{ arret.rcinquante }}</td>
+                            <td>{{ arret.rzero }}</td>
+                            <td>{{ arret.rcarence }}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="col">
+                    <p> Anciennete = {{ employe.anciennete }} </p>
+                    <p> Coeffiecient = {{ employe.coeff.nom }}</p>
+                    <p> Nombre de jour = {{ arret.nbreJour }} </p>
+                </div>
+            </div>
+            <br/>
+            <div class="section">
+                <button type="submit" class="btn btn-danger">Annuler</button>
+                {{form_row(form.save)}}
+            </div>
+        {% endif %}
+        {{form_end(form)}}
+{% endblock %}
+{% block javascripts %}{% endblock %}

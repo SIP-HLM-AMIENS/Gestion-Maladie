@@ -1,0 +1,312 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion Maladie - Gestion{% endblock %}
+
+{% block body %}
+    {% for message in app.flashes('Test') %}
+    <div class="flash-notice">
+        {{ message|raw }}
+    </div>
+    {% endfor %}
+
+    <h1>Vue d'ensemble</h1>
+    <br/>
+    <div class="section">
+        <a type="button" class="btn btn-primary" href="{{ path('gestion_arret_ajout')}}">Nouveau</a>
+        <a class="btn btn-primary" data-toggle="collapse" href="#collapseFiltre" role="button" aria-expanded="false" aria-controls="collapseFiltre">Filtre</a>
+    </div>
+    <br/>
+    <div class="collapse" id="collapseFiltre" style="background-color:lightgrey">
+        <div class="container">
+            <form class="form">
+                <div class="form-group">
+                    <div class="row">
+                        <div class="col-lg-4">
+                            <label for="selectAnnée">Année</label>
+                            <select class="form-control" id="selectAnnée">
+                                <option value='0'>Toutes</option>
+                                <option>2017</option>
+                                <option>2018</option>
+                            </select>
+                            <label for="selectmois">Mois</label>
+                            <select class="form-control" id="selectMois">
+                                <option value='0'>Tous</option>
+                                <option value='01'>Janvier</option>
+                                <option value='02'>Février</option>
+                                <option value='03'>Mars</option>
+                                <option value='04'>Avril</option>
+                                <option value='05'>Mai</option>
+                                <option value='06'>Juin</option>
+                                <option value='07'>Juillet</option>
+                                <option value='08'>Août</option>
+                                <option value='09'>Septembre</option>
+                                <option value='10'>Octobre</option>
+                                <option value='11'>Novembre</option>
+                                <option value='12'>Décembre</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-4">
+                            <label for="selectEmployé">Employé</label>
+                            <select class="form-control" id="selectEmployé">
+                                <option value='0'>Tous</option>
+                                {% for employé in employes %}
+                                    <option value='{{employé.matricule}}'>{{employé}}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-lg-4">
+                            <label for="selectMotif">Nature</label>
+                            <select class="form-control" id="selectMotif">
+                                <option value='0'>Tous</option>
+                                {% for motif in motifs %}
+                                    <option value='{{motif.id}}'>{{motif}}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-primary" type="submit">OK</a>
+            </form>
+        </div>
+    </div>
+    <br />
+
+    <div class="section">
+        <div id='test'>
+            {% include 'gestion/tableauArret.html.twig' with { 'arrets' : arrets} %}
+        </div>
+        <div class="modal fade" id="arretInfoModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary" style="color:white">
+                        <h5 class="modal-title" id="exampleModalLabel">Informations détaillées</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="container">
+                            <h5 class="text-center bg-dark">Employé</h5>
+                            <br />
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <label for="#employé"> Employé :</label><input type="text" id="employé" size="50" readonly></input>
+                                </div>
+                            </div>
+                            <br />
+                            <div class="row">
+                                <div class="col-lg-4">
+                                    <label for="#dateEntrée">Date Entrée : </label><input type="text" id="dateEntrée" readonly></input>
+                                </div>
+                                <div class="col-lg-4">
+                                </div>
+                                <div class="col-lg-4">
+                                    <label for="#ancienneté">Ancienneté : </label><input type="text" id="ancienneté" readonly></input>
+                                </div>
+                            </div>
+                            <br />
+                            <h5 class="text-center bg-dark">Arrêt</h5><br />
+                            <div class="row">
+                                <div class="col-lg-4">
+                                    <label for="#typeArret">Type d'arret :</label><input type="text" id="typeArret" readonly></input>
+                                </div>
+                                <div class="col-lg-4">
+                                </div>
+                                <div class="col-lg-4">
+                                    <label for="#VisiteMedicale">Visite médicale :</label><input type="checkbox" id="VisiteMedicale" onclick="return false;"></label>
+                                </div>
+                            </div>
+                            <br />
+                            <div class="row">
+                                <div class="col-lg-4">
+                                    <label for="#dateDebut">Date de début :</label><input type="text" id="dateDebut" readonly></input>
+                                </div>
+                                <div class="col-lg-4">
+                                    <label for="#dateFin">Date de fin :</label><input type="text" id="dateFin" readonly></input>
+                                </div>
+                                <div class="col-lg-4">
+                                    <label for="#NbJour">Nombre de jour :</label><input type="text" id="NbJour" readonly></label>
+                                </div>
+                            </div>
+                            <br />
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <label for="#tableRep">Repartitions :</label>
+                                    <table class="table table-condensed table-bordered" id="tableRep">
+                                        <tr>
+                                            <th>100%</th>
+                                            <th>50%</th>
+                                            <th>0</th>
+                                            <th>carence</th>
+                                        </tr>
+                                        <tr>
+                                            <td id="r100">0</td>
+                                            <td id="r50">0</td>
+                                            <td id="r0">0</td>
+                                            <td id='carence'>0</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <h5 class="text-center bg-dark">Historique</h5><br />
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <table class="table table-bordered table-hover" id='tableProlon'>
+                                        <thead>
+                                            <tr>
+                                                <th>Type</th>
+                                                <th>Début</th>
+                                                <th>Fin</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <h5 class="text-center bg-dark">Dossier IJSS</h5><br />
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <table class="table table-bordered table-hover" id='tableIJSS'>
+                                        <thead>
+                                            <tr>
+                                                <th>Date Reception</th>
+                                                <th>Nombre jour</th>
+                                                <th>Montant</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-primary">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+
+{% block javascripts %}
+
+	{{ parent() }}
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.form/4.2.2/jquery.form.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+	<script>
+
+       $("#arretInfoModal").on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget) // Button that triggered the modal
+            var recipient = button.data('arret') // Extract info from data-* attributes
+            // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+            $url = "{{path('modal_contruction', { arretID: 'replace'})}}";
+            $url = $url.replace('replace',recipient);
+
+            $.ajax({
+                url:$url,
+                method: "POST",
+                data: {}
+            }).done(function(data){
+                    var employé = data.matricule+ " - " + data.nom +" " + data.prenom;
+                    $('#employé').val(employé);
+                    $('#dateEntrée').val(data.dateEntrée);
+                    $('#anciennetée').val(data.anciennetée);
+
+                    $('#typeArret').val(data.motif);
+                    $('#dateDebut').val(data.dateDebut);
+                    $('#dateFin').val(data.dateFin);
+                    $('#NbJour').val(data.NbJour);
+                    //$('#VisiteMedicale').val(data.VisiteMedicale);
+                    $('#VisiteMedicale').prop('checked', data.VisiteMedicale);
+                    $('#r100').text(data.rcent);
+                    $('#r50').text(data.rcinquante);
+                    $('#r0').text(data.rzero);
+                    $('#rcarence').text(data.carence);
+                    $('#tableProlon > tbody').empty()
+                    $.each(data.prolongations,function(i) {
+                        $('#tableProlon > tbody:last-child').append('<tr><td>'+this.type+'</td><td>'+this.dateIn+'</td><td>'+this.dateOut+'</tr>');
+                    }
+                    )
+                    $('#tableIJSS > tbody').empty()
+                    $.each(data.IJSS,function(i) {
+                        $('#tableIJSS > tbody:last-child').append('<tr><td>'+this.dateReception+'</td><td>'+this.NbJour+'</td><td>'+this.MontantUnitaire+'</tr>');
+                    }
+                    )
+
+            });
+
+
+            // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+            var modal = $(this)
+            //modal.find('.matricule').text('New message to ' + recipient)
+            modal.find('.modal-body').val(recipient);
+        });
+
+        $("#IJSSInfoModal").on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget); // Button that triggered the modal
+            var recipient = button.data('arret'); // Extract info from data-* attributes
+            // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
+            // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
+            console.log(recipient);
+       });
+
+
+
+        $(document).on('submit', 'form', function(e){
+			// il est impératif de commencer avec cette méthode qui va empêcher le navigateur d'envoyer le formulaire lui-même
+            e.preventDefault();
+            
+            form = $(e.target);
+            $année = $('#selectAnnée').val();
+            $mois = $('#selectMois').val();
+            $employé = $('#selectEmployé').val();
+            $motif = $('#selectMotif').val();
+
+            modal = $('#exampleModal');
+ 
+			var title = $('#article_title').val();
+            
+        	var $submitButton = form.find(':submit');
+    		//$submitButton.prop('disabled', true);
+
+            $.ajax({
+                url:"{{path('filtre')}}",
+                method: "POST",
+                data: {année: $année, mois: $mois, employé: $employé, motif: $motif}
+            }).done(function(msg){
+                $('#test').html(msg);
+            });
+        });
+
+
+        function changerPageFiltre($page)
+        {
+            $année = $('#selectAnnée').val();
+            $mois = $('#selectMois').val();
+            $employé = $('#selectEmployé').val();
+            $motif = $('#selectMotif').val();
+            $url = "{{path('filtre_paginated', { page: 'replace'})}}";
+            $url = $url.replace('replace',$page);
+
+            $.ajax({
+                url:$url,
+                method: "POST",
+                data: {année: $année, mois: $mois, employé: $employé, motif: $motif}
+            }).done(function(msg){
+                $('#test').html(msg);
+            });
+        }
+
+
+
+
+	</script>
+{% endblock %}

@@ -1,0 +1,78 @@
+    <table class="table table-hover">
+        <tr>
+            <th>Employé</th>
+            <!--<th>Ancienneté</th>-->
+            <th>Nature</th>
+            <th>DU</th>
+            <th>AU</th>
+            <th>Nbre jours</th>
+            <th>VM reprise</th>
+            <th>Clos</th>
+            <th class="text-center">Actions</th>
+        </tr>
+        {% for arret in arrets %}
+        <tr>
+            <td> {{ arret.employe.nom ~ ' ' ~ arret.employe.prenom }} </td>
+            <!--<td> {{ arret.anciennete }} </td>-->
+            <td> {{ arret.motif.nom }} </td>
+            <td> {{ arret.dateIn|date("d/m/Y") }} </td>
+            <td>
+                {% if arret.dateOut %}
+                    {{ arret.dateout|date("d/m/Y") }}
+                {% endif %}
+            </td>
+            <td> {{ arret.nbreJour }} </td>
+            <td> 
+                {% if arret.VisiteReprise %}
+                    Vrai
+                {% else %}
+                    Faux
+                {% endif %}
+            </td>
+            <td>
+                {% if arret.Clos %}
+                    Clos
+                {% else %}
+                    Actif
+                {% endif %}
+            </td>
+            <td>
+                {% if arret.Clos %}
+                <!--<button class="btn btn-outline-warning" href="{{ path('IJSS_add', {'arretId': arret.id}) }}" disabled>IJSS</button>-->
+                {% else %}
+                <a type="button" class="btn btn-outline-success" href="{{ path('prolongation_add', {'arretId': arret.id}) }}">Prolonger</a>
+                <a type="button" class="btn btn-outline-warning" href="{{ path('IJSS_add', {'arretId': arret.id}) }}">IJSS</a>
+                {% endif %}
+                <button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#arretInfoModal" data-arret="{{ arret.id }}">Détails</button>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    {% if pager.haveToPaginate %}
+        <ul class="pagination">
+
+            {# back #}
+            {% set state = '' %}
+            {% if  pager.getCurrentPage()  == 1 %}
+                {% set state = 'disabled' %}
+            {% endif %}
+            <li class="page-item {{ state }}"><a class="page-link" onclick="#">&laquo;</a></li>
+
+            {# pages 1 2 3 ... #}
+            {% for givenPage in 1..pager.getNbPages() %}
+                {% set state = '' %}
+                {% if  pager.getCurrentPage()  == givenPage %}
+                    {% set state = 'active' %}
+                {% endif %}
+                <li class="page-item {{ state }}"><a class="page-link" onclick="changerPageFiltre({{ givenPage }})"> {{ givenPage }}</a></li>
+            {%  endfor %}
+
+            {# forward #}
+            {% set state = '' %}
+            {% if  pager.getCurrentPage() == pager.getNbPages() %}
+                {% set state = 'disabled' %}
+            {% endif %}
+            <li class="page-item {{ state }}" ><a class="page-link" onclick="#">&raquo;</a></li>
+        </ul>
+    {% endif %}

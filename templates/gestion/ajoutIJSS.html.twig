@@ -1,0 +1,50 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+    <div class="jumbotron">
+        <h1>Ajouter une IJSS</h1>
+        <hr class="my-4">
+        {{ form_start(form)}}
+        <div class="row">
+            <div class="col-lg-8">
+                {{form_row(form.Arret)}}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-4">
+                Nombre de jour restant : {{ joursRestant }}
+            </div>
+        </div>
+        <hr class="my-4">
+
+        {% if errors is defined %}
+        <div class="alert alert-danger" role="alert">
+            {{ errors|raw }}
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col-lg-4">
+                {{form_row(form.DateReception, {'label': 'Date de reception','attr' : {'placeholder': 'Date ...'}})}}
+            </div>
+            <div class="col-lg-4">
+                {{form_row(form.NbJour, {'label': 'Nombre de jour'} )}}
+            </div>
+            <div class="col-lg-4">
+                {{form_row(form.MontantUnitaire)}}
+            </div>
+        </div>
+        <br />
+        <div class="row">
+            <div class="col-lg-1 offset-lg-9">
+                <button type="submit" class="btn btn-danger">Annuler</button>
+            </div>
+            <div class="col-lg-1">
+                {{form_row(form.save)}}
+            </div>
+        </div>
+    </div>
+    {{ form_end(form)}}
+
+{% endblock %}
+{% block javascripts %}{% endblock %}

@@ -1,0 +1,47 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+
+    <h1>Gestion des employés</h1>
+    <br/>
+    <div class="section">
+        <table class="table table-hover">
+            <tr>
+                <th>Matricule</th>
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Service</th>
+                <th>Date entrée</th>
+                <th>Coefficient</th>
+                <th>Actions</th>
+            </tr>
+            {% for employe in employes %}
+            <tr>
+                <td> {{ employe.matricule }} </td>
+                <td> {{ employe.nom }} </td>
+                <td> {{ employe.prenom }} </td>
+                <td> {{ employe.service.nom }} </td>
+                <td> {{ employe.dateEntree|date("m/d/Y") }} </td>
+
+                    {% if employe.coeff.cadre %}
+                        <td style='color:red'>{{ employe.coeff.nom }}</td>
+                    {% else %}
+                        <td style='color:blue'>{{ employe.coeff.nom }}</td>
+                    {% endif %}
+
+                <td>
+                    <div class="btn-group" role="group" aria-label="">
+                        <button type="button" class="btn btn-link">Modifier</button>
+                        <form action="" method="post" id="delete-form">
+                            <button type="submit" class="btn btn-link">
+                                Supprimer
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+{% endblock %}
