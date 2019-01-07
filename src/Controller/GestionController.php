@@ -411,7 +411,7 @@ class GestionController extends AbstractController
                     $this->EnvoyerMail($mailer);
                 }
 
-                $this->addFlash('Test','TEST MICRO');
+                $this->addFlash('Ok','Prolongation ajoutée');
                 $manager->flush();
                 return $this->redirectToRoute('gestion');
 
