@@ -40,7 +40,6 @@ class AdministrationController extends AbstractController
 
     /**
     * @Route("/administration/inscription", name="inscription")
-    * @Security("has_role('ROLE_ADMIN')")
     */
     public function registration(Request $request, ObjectManager $manager, UserPasswordEncoderInterface $encoder)
     {
