@@ -30,8 +30,10 @@
                 {% endif %}
             </td>
             <td>
-                {% if arret.Clos %}
+                {% if arret.Clos == 1 %}
                     Clos
+                {% elseif arret.Clos == 2 %}
+                    <p style='color:red'>Litige</p>
                 {% else %}
                     Actif
                 {% endif %}
@@ -44,6 +46,7 @@
                 <a type="button" class="btn btn-outline-warning" href="{{ path('IJSS_add', {'arretId': arret.id}) }}">IJSS</a>
                 {% endif %}
                 <button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#arretInfoModal" data-arret="{{ arret.id }}">Détails</button>
+                <button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#arretComModal" data-arret="{{ arret.id }}">Comm</button>
             </td>
         </tr>
         {% endfor %}

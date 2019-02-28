@@ -9,6 +9,7 @@ use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 
 class IjssType extends AbstractType
@@ -16,6 +17,13 @@ class IjssType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder
+            ->add('type',ChoiceType::class, [
+                'choices' => [
+                    'IJSS' => 'ijss',
+                    'IJ Prév' => 'ijp'
+                ]
+
+            ])
             ->add('DateReception', DateType::class, array(
                 'widget' => 'single_text',
                 'html5' => false,

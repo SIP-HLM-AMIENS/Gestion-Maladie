@@ -11,6 +11,7 @@ use App\Form\IjssType;
 use App\Entity\Employe;
 use App\Form\ArretType;
 use Pagerfanta\Pagerfanta;
+use App\Entity\Commentaire;
 use App\Entity\Prolongation;
 use App\Service\ArretCalcul;
 use App\Form\ProlongationType;
@@ -174,8 +175,6 @@ class GestionController extends AbstractController
         }
     }
 
-
-
     /**
      * @Route("/gestion/employes", name="gestion_employes")
      * @Security("has_role('ROLE_USER')")
@@ -203,6 +202,14 @@ class GestionController extends AbstractController
 
         if($form->isSubmitted() && $form->isValid())
         {                   
+            //Création de la prolongation initial
+            $prolongation = new Prolongation();
+            $prolongation->setType("initial");
+            $prolongation->setDateIn($arret->getDateIn());
+            $prolongation->setDateOut($arret->getDateOut());
+            $arret->addProlongation($prolongation);
+            
+
             //Calcul visite Médicale
             if( $arret->getNbreJour() >= 30 )
             {
@@ -228,13 +235,10 @@ class GestionController extends AbstractController
             $arret->setRzero($tab[2]);
             $arret->setRcarence($tab[3]);
             $arret->setClos(0);
+            $arret->setPrelSource($ar->calculPrelSource($arret));
 
-            //Création de la prolongation initial
-            $prolongation = new Prolongation();
-            $prolongation->setType("initial");
-            $prolongation->setDateIn($arret->getDateIn());
-            $prolongation->setDateOut($arret->getDateOut());
-            $arret->addProlongation($prolongation);
+            //calcul si présence d'un dossier prévoyance
+            $arret->setPrevoyance($ar->calculPrevoyance($arret,$employe));
 
             //Persistance de l'arret
             $manager->persist($prolongation);
@@ -262,8 +266,6 @@ class GestionController extends AbstractController
 
             }
 
-
-
         }
         
         return $this->render('gestion/ajoutArret.html.twig', [
@@ -272,7 +274,7 @@ class GestionController extends AbstractController
     }
 
     /**
-     * @Route("/Modal/{arretID}", name="modal_contruction")
+     * @Route("/Modal_Arret/{arretID}", name="modalArret_contruction")
      * @Security("has_role('ROLE_USER')")
      */
     public function ConstruireModalArret(Request $req, $arretID)
@@ -308,6 +310,7 @@ class GestionController extends AbstractController
             }
 
             $data = [
+                'clos' => $arret->getClos(),
                 'matricule' => $employe->getMatricule(),
                 'nom' => $employe->getNom(),
                 'prenom' => $employe->getPrenom(),
@@ -318,10 +321,12 @@ class GestionController extends AbstractController
                 'dateFin' => $arret->getDateOut()->format("d/m/Y"),
                 'NbJour' => $arret->getNbreJour(),
                 'VisiteMedicale' => $arret->getVisiteReprise(),
+                'Prevoyance' => $arret->getPrevoyance(),
                 'rcent' => $arret->getRcent(),
                 'rcinquante' => $arret->getRcinquante(),
                 'rzero' => $arret->getRzero(),
                 'carence' => $arret->getRcarence(),
+                'prelSource' => $arret->getPrelSource(),
                 'prolongations' => $prolongations,
                 'IJSS' => $IJSS
             ];
@@ -333,20 +338,54 @@ class GestionController extends AbstractController
         }
     }
 
+        /**
+     * @Route("/Modal_Comm/{arretID}", name="modalComm_contruction")
+     * @Security("has_role('ROLE_USER')")
+     */
+    public function ConstruireModalComm(Request $req, $arretID)
+    {
+
+        if($req->isXMLHttpRequest())
+        {
+            $arret = $this->getDoctrine()->getRepository(Arret::class)->find($arretID);
+            
+            $commentaires = null;
+            //récupération des commentaires
+            foreach($arret->getCommentaires() as $commentaire)
+            {
+                $commentaires[] = array(
+                    'id' => $commentaire->getId(),
+                    'user' => $commentaire->getUser()->getUsername(),
+                    'date' => $commentaire->getDate()->format("d/m/Y H:i:s"),
+                    'message' => $commentaire->getMessage()
+                );
+            }
+
+            $data = [
+                'commentaires' => $commentaires
+            ];
+
+
+
+            return new JsonResponse($data);
+
+        }
+    }
+
     /**
-     * @Route("/Prolongation/add/{arretId}", name="prolongation_add")
+     * @Route("/gestion/prolongation/add/{arretId}", name="prolongation_add")
      * @Security("has_role('ROLE_USER')")
      */
     public function AjouterPrologation(Request $req,ArretCalcul $ar,ObjectManager $manager, $arretId)
     {
         $prolongation = new Prolongation();        
 
-            $arret = $this->getDoctrine()->getRepository(Arret::class)->find($arretId);
-            $prolongation->setArret($arret);
-            $prolongation->setType("Prolongation");
-            $date =  clone $arret->getDateOut();
-            $prolongation->setDatein($date);
-            $prolongation->getDateIn()->add(new DateInterval('P1D'));
+        $arret = $this->getDoctrine()->getRepository(Arret::class)->find($arretId);
+        $prolongation->setArret($arret);
+        $prolongation->setType("Prolongation");
+        $date =  clone $arret->getDateOut();
+        $prolongation->setDatein($date);
+        $prolongation->getDateIn()->add(new DateInterval('P1D'));
 
         $form = $this->createForm(ProlongationType::class, $prolongation);
         $form->handleRequest($req);
@@ -354,23 +393,25 @@ class GestionController extends AbstractController
         if($form->isSubmitted() && $form->isValid())
         {
             //création d'un arret provisoire à partir de l'arret initiale
-            $arretProvisoire = clone $arret;
+            $ancienArret = clone $arret;
 
             //Calcul des nouvelles dates de l'arret
-            $arretProvisoire->setDateOut(clone $prolongation->getDateOut());
+            $arret->setDateOut($prolongation->getDateOut());
+            
+            $nbjourprev = $arret->getNbreJour() + ($prolongation->getDateIn()->diff($prolongation->getDateOut()))->format('%a')+1;
 
             //Calcul visite Médicale
-            if( $arretProvisoire->getNbreJour() >= 30 )
+            if( $nbjourprev >= 30 )
             {
-                $arretProvisoire->setVisiteReprise(true);
+                $arret->setVisiteReprise(true);
             }
             else
             {
-                $arretProvisoire->setVisiteReprise(false);
+                $arret->setVisiteReprise(false);
             }
 
             //calcul de l'anciennete de l'employé
-            $employe = $arretProvisoire->getEmploye();
+            $employe = $arret->getEmploye();
             $employe->anciennete = $ar->diffMois($employe->getDateEntree(),new \DateTime);
 
             //Recherche des derniers arret pour le calcul de la carence
@@ -378,11 +419,15 @@ class GestionController extends AbstractController
             $lda = $em->findArretBefore24($employe->getId());
 
             //calcul de la répartition
-            $tab = $ar->calculRepartition($employe,$arretProvisoire,$lda);
-            $arretProvisoire->setRcent($tab[0]);
-            $arretProvisoire->setRcinquante($tab[1]);
-            $arretProvisoire->setRzero($tab[2]);
-            $arretProvisoire->setRcarence($tab[3]);
+            $tab = $ar->calculRepartitionPrev($employe,$arret,$lda, $nbjourprev);
+            $arret->setRcent($tab[0]);
+            $arret->setRcinquante($tab[1]);
+            $arret->setRzero($tab[2]);
+            $arret->setRcarence($tab[3]);
+            $arret->setPrelSource($ar->calculPrelSourcePrev($arret,$nbjourprev));
+
+            //calcul du dossier de prévoyance
+            $arret->setPrevoyance($ar->calculPrevoyancePrev($arret,$employe,$nbjourprev));
             
             $manager->persist($arret);
             $manager->persist($prolongation);
@@ -393,18 +438,19 @@ class GestionController extends AbstractController
                 [
                     'form' => $form->createView(),
                     'arret' => $arret,
-                    'ArretProvisoire' => $arretProvisoire,
+                    'ArretProvisoire' => $ancienArret,
                     'test' => 'Ok'
                 ]);
             }
             elseif($form->get('save')->isClicked())
             {
-                $arret->setDateOut($arretProvisoire->getDateOut());
+                /*$arret->setDateOut($arretProvisoire->getDateOut());
                 $arret->setVisiteReprise($arretProvisoire->getVisiteReprise());
                 $arret->setRcent($arretProvisoire->getRcent());
                 $arret->setRcinquante($arretProvisoire->getRcinquante());
                 $arret->setRzero($arretProvisoire->getRzero());
                 $arret->setRcarence($arretProvisoire->getRcarence());
+                $arret->setPrelSource($arretProvisoire->getPrelSource());*/
 
                 if($arret->getVisiteReprise() == 1)
                 {
@@ -430,6 +476,108 @@ class GestionController extends AbstractController
     }
 
     /**
+     * @Route("/gestion/rechute/add/{arretId}", name="rechute_add")
+     * @Security("has_role('ROLE_USER')")
+     */
+
+    public function AjouterRechute(Request $req, ArretCalcul $ar, ObjectManager $manager, $arretId)
+    {
+        $prolongation = new Prolongation();        
+
+        $arret = $this->getDoctrine()->getRepository(Arret::class)->find($arretId);
+        $prolongation->setArret($arret);
+        $prolongation->setType("Rechute");
+
+        $form = $this->createForm(ProlongationType::class, $prolongation);
+        $form->handleRequest($req);
+
+        if($form->isSubmitted() && $form->isValid())
+        {
+            //création d'un arret provisoire à partir de l'arret initiale
+            $ancienArret = clone $arret;
+
+            //Calcul des nouvelles dates de l'arret
+            $arret->setDateOut($prolongation->getDateOut());
+            
+            $nbjourprev = $arret->getNbreJour() + ($prolongation->getDateIn()->diff($prolongation->getDateOut()))->format('%a')+1;
+
+            //Calcul visite Médicale
+            if( $nbjourprev >= 30 )
+            {
+                $arret->setVisiteReprise(true);
+            }
+            else
+            {
+                $arret->setVisiteReprise(false);
+            }
+
+            //calcul de l'anciennete de l'employé
+            $employe = $arret->getEmploye();
+            $employe->anciennete = $ar->diffMois($employe->getDateEntree(),new \DateTime);
+
+            //Recherche des derniers arret pour le calcul de la carence
+            $em = $this->getDoctrine()->getRepository(Employe::class);
+            $lda = $em->findArretBefore24($employe->getId());
+
+            //calcul de la répartition
+            $tab = $ar->calculRepartitionPrev($employe,$arret,$lda, $nbjourprev);
+            $arret->setRcent($tab[0]);
+            $arret->setRcinquante($tab[1]);
+            $arret->setRzero($tab[2]);
+            $arret->setRcarence($tab[3]);
+            $arret->setPrelSource($ar->calculPrelSourcePrev($arret,$nbjourprev));
+
+            //calcul du dossier de prévoyance
+            $arret->setPrevoyance($ar->calculPrevoyancePrev($arret,$employe,$nbjourprev));
+            
+            $manager->persist($arret);
+            $manager->persist($prolongation);
+
+            if($form->get('load')->isClicked())
+            {
+                return $this->render('gestion/ajoutProlongation.html.twig',
+                [
+                    'form' => $form->createView(),
+                    'arret' => $arret,
+                    'ArretProvisoire' => $ancienArret,
+                    'test' => 'Ok'
+                ]);
+            }
+            elseif($form->get('save')->isClicked())
+            {
+                /*$arret->setDateOut($arretProvisoire->getDateOut());
+                $arret->setVisiteReprise($arretProvisoire->getVisiteReprise());
+                $arret->setRcent($arretProvisoire->getRcent());
+                $arret->setRcinquante($arretProvisoire->getRcinquante());
+                $arret->setRzero($arretProvisoire->getRzero());
+                $arret->setRcarence($arretProvisoire->getRcarence());
+                $arret->setPrelSource($arretProvisoire->getPrelSource());*/
+
+                if($arret->getVisiteReprise() == 1)
+                {
+                    $this->EnvoyerMail($mailer);
+                }
+
+                $this->addFlash('Ok','Prolongation ajoutée');
+                $manager->flush();
+                return $this->redirectToRoute('gestion');
+
+            }
+        }
+        else
+        {
+
+
+        }
+
+        return $this->render('gestion/ajoutProlongation.html.twig', [
+            'form' => $form->createView(),
+            'test' => 'Ko'
+        ]);
+
+    }
+
+    /**
      * @Route("/IJSS/add/{arretId}", name="IJSS_add")
      * @Security("has_role('ROLE_USER')")
      */
@@ -442,12 +590,17 @@ class GestionController extends AbstractController
 
         //calcul du nombre de jour restant
         $totalIJSS = 0;
+        $totalIJP = 0;
         foreach($arret->getIJSS() as $IJ)
         {
-            $totalIJSS += $IJ->getNbJour();
+            if($IJ->getType() == 'ijss')
+                $totalIJSS += $IJ->getNbJour();
+            elseif($IJ->getType() =='ijp')
+                $totalIJP += $IJ->getNbJour();
         }
 
-        $joursRestant = $arret->getNbreJour() - $totalIJSS;
+        $joursRestantIJSS = $arret->getNbreJour() - $totalIJSS;
+        $jourRestantIJP = $arret->getIJP() - $totalIJP;
         ////////////////////
 
         //Création du formulaire
@@ -457,20 +610,34 @@ class GestionController extends AbstractController
         if($form->isSubmitted() && $form->isValid())
         {   
             $errors = null;
-
-            //ajout des nombre de jour de l'actuel
-            $totalIJSS += $IJSS->getNbJour();
-            
-            //Controle sur le nombre de jour
-            if($totalIJSS == $arret->getNbreJour())
+            if($IJSS->getType() == "ijss")
             {
-                $arret->setClos(1);
+                //ajout des nombre de jour de l'actuel
+                $totalIJSS += $IJSS->getNbJour();
+                
+                //Controle sur le nombre de jour
+                if($totalIJSS > $arret->getNbreJour())
+                {
+                    $errors .= "- Nombre de jour trop grand ! <br />";
+                }
+                //////////////////////
             }
-            elseif($totalIJSS > $arret->getNbreJour())
+            elseif($IJSS->getType() =="ijp")
             {
-                $errors .= "- Nombre de jour trop grand ! <br />";
+                //ajout des nombre de jour de l'actuel
+                $totalIJP += $IJSS->getNbJour();
+                
+                //Controle sur le nombre de jour
+                if($totalIJP > $arret->getIJP())
+                {
+                    $errors .= "- Nombre de jour trop grand ! <br />";
+                }
+                //////////////////////
             }
-            //////////////////////
+            else
+            {
+                $errors .="- Type inconnu";
+            }
 
             //controle sur les dates
             if($IJSS->getDateReception() < $arret->getDateIn())
@@ -479,13 +646,19 @@ class GestionController extends AbstractController
             }
             ///////////////////////
 
+            if($totalIJP == $arret->getIJP() && $totalIJSS == $arret->getNbreJour())
+            {
+                $arret->setClos(1);
+            }
+
             //Retours en erreur
             if($errors != null)
             {
                 return $this->render('gestion/ajoutIJSS.html.twig', [
                     'form' => $form->createView(),
                     'errors' => $errors,
-                    'joursRestant' => $joursRestant
+                    'IJSSRestant' => $joursRestantIJSS,
+                    'IJPRestant' => $jourRestantIJP
                 ]);
             }
 
@@ -500,9 +673,79 @@ class GestionController extends AbstractController
 
         return $this->render('gestion/ajoutIJSS.html.twig', [
             'form' => $form->createView(),
-            'joursRestant' => $joursRestant
+            'IJSSRestant' => $joursRestantIJSS,
+            'IJPRestant' => $jourRestantIJP
         ]);
     }
+
+    /**
+     * @Route("/Modal_Comm/{id}/{message}/ajoutComm", name="ajout_commentaire")
+     */
+    public function ajoutCommentaire(Request $request, $id, $message)
+    {
+ 
+        if($request->isXmlHttpRequest()) // pour vérifier la présence d'une requete Ajax
+        {
+                 
+            $user = $this->getUser();
+            $arret = $this->getDoctrine()->getRepository(Arret::class)->find($id);
+    
+            $commentaire = new Commentaire();
+            $commentaire->setDate(new \DateTime());
+            $commentaire->setMessage($message);
+            $commentaire->setUser($user);
+            $commentaire->setArret($arret);
+
+            $this->getDoctrine()->getManager()->persist($commentaire);
+            $this->getDoctrine()->getManager()->flush();
+
+            return new Response("Ok");
+        }
+        return new Response("Nonnn ....");    
+    }
+    /**
+     * @Route("/Modal_Arret/{id}/toggleLitige", name="toggleLitige")
+     */
+    public function toggleLitige(Request $request, $id)
+    {
+        if($request->isXmlHttpRequest()) // pour vérifier la présence d'une requete Ajax
+        {
+            $arret = $this->getDoctrine()->getRepository(Arret::class)->find($id);
+
+            if($arret->getClos() == 0 || $arret->getClos() == 1)
+            {
+                $arret->setClos(2);
+            }
+            elseif($arret->getClos() == 2)
+            {
+                //calcul du nombre de jour restant
+                $totalIJSS = 0;
+                $totalIJP = 0;
+                foreach($arret->getIJSS() as $IJ)
+                {
+                    if($IJ->getType() == 'ijss')
+                        $totalIJSS += $IJ->getNbJour();
+                    elseif($IJ->getType() =='ijp')
+                        $totalIJP += $IJ->getNbJour();
+                }
+                if($totalIJP == $arret->getIJP() && $totalIJSS == $arret->getNbreJour())
+                {
+                    $arret->setClos(1);
+                }
+                else
+                {
+                    $arret->setClos(0);
+                }
+            }
+
+            $this->getDoctrine()->getManager()->persist($arret);
+            $this->getDoctrine()->getManager()->flush();
+
+            return new Response($arret->getClos());
+        }
+        return new Response("Nonnn ....");    
+    }
+
 
     private function filtreLesArrets($année, $mois, $filtreEmployé, $filtreMotif)
     {

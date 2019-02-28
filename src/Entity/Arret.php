@@ -77,14 +77,30 @@ class Arret
     private $iJSS;
 
     /**
-     * @ORM\Column(type="boolean")
+     * @ORM\Column(type="integer")
      */
     private $clos;
+
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $PrelSource;
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $prevoyance;
+
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\Commentaire", mappedBy="arret")
+     */
+    private $commentaires;
 
     public function __construct()
     {
         $this->prolongations = new ArrayCollection();
         $this->iJSS = new ArrayCollection();
+        $this->commentaires = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -94,7 +110,7 @@ class Arret
 
     public function getNbreJour(): ?int
     {   $res = 0;
-        if($this->DateIn)
+        /*if($this->DateIn)
         {
             if($this->DateOut)
             {
@@ -105,6 +121,12 @@ class Arret
                 $new = new \Datetime();
                 $res = ($this->DateIn->diff($new))->format('%a')+1; 
             }
+        }*/
+
+
+        foreach ($this->getProlongations() as $prolongation)
+        {
+            $res += ($prolongation->getDateIn()->diff($prolongation->getDateOut()))->format('%a')+1;
         }
 
         return $res;
@@ -285,14 +307,86 @@ class Arret
         return $this;
     }
 
-    public function getClos(): ?bool
+    public function getClos(): ?int
     {
         return $this->clos;
     }
 
-    public function setClos(bool $clos): self
+    public function setClos(int $clos): self
     {
         $this->clos = $clos;
+
+        return $this;
+    }
+
+    public function getPrelSource(): ?int
+    {
+        return $this->PrelSource;
+    }
+
+    public function setPrelSource(int $PrelSource): self
+    {
+        $this->PrelSource = $PrelSource;
+
+        return $this;
+    }
+
+    public function getPrevoyance(): ?bool
+    {
+        return $this->prevoyance;
+    }
+
+    public function setPrevoyance(bool $prevoyance): self
+    {
+        $this->prevoyance = $prevoyance;
+
+        return $this;
+    }
+
+    public function getIJP() :?int
+    {
+        $nbjour = 0;
+        if( $this->prevoyance == 1)
+        {
+            if($this->employe->getCoeff()->getCadre() == 1)
+            {
+                $nbjour = $this->getNbreJour() - 30;
+            }
+            else
+            {
+                $nbjour = $this->getNbreJour() - 90;
+            }
+        }
+        return $nbjour;
+    }
+
+    /**
+     * @return Collection|Commentaire[]
+     */
+    public function getCommentaires(): Collection
+    {
+        return $this->commentaires;
+    }
+
+    public function addCommentaire(Commentaire $commentaire): self
+    {
+        if (!$this->commentaires->contains($commentaire)) {
+            $this->commentaires[] = $commentaire;
+            $commentaire->setArret($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCommentaire(Commentaire $commentaire): self
+    {
+        if ($this->commentaires->contains($commentaire)) {
+            $this->commentaires->removeElement($commentaire);
+            // set the owning side to null (unless already changed)
+            if ($commentaire->getArret() === $this) {
+                $commentaire->setArret(null);
+            }
+        }
 
         return $this;
     }

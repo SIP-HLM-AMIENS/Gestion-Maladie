@@ -31,12 +31,14 @@
                             <th>50%</th>
                             <th>Ø</th>
                             <th>Carence</th>
+                            <th>Prel Source</th>
                         </tr>
                         <tr>
                             <td>{{ arret.rcent }}</td>
                             <td>{{ arret.rcinquante }}</td>
                             <td>{{ arret.rzero }}</td>
                             <td>{{ arret.rcarence }}</td>
+                            <td>{{ arret.prelSource }}</td> 
                         </tr>
                     </table>
                 </div>
@@ -44,6 +46,11 @@
                     <p> Anciennete = {{ employe.anciennete }} </p>
                     <p> Coeffiecient = {{ employe.coeff.nom }}</p>
                     <p> Nombre de jour = {{ arret.nbreJour }} </p>
+                    {% if arret.prevoyance %}
+                        <p> Dossier prévoyance = <b>Oui</b></p>
+                    {% else %}
+                        <p> Dossier prévoyance = Non</p>
+                    {% endif %}
                 </div>
             </div>
             <br/>

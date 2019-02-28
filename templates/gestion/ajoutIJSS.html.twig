@@ -1,7 +1,8 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-    <div class="jumbotron">
+    <br />
+{#    <div class="jumbotron">
         <h1>Ajouter une IJSS</h1>
         <hr class="my-4">
         {{ form_start(form)}}
@@ -31,6 +32,56 @@
                 {{form_row(form.NbJour, {'label': 'Nombre de jour'} )}}
             </div>
             <div class="col-lg-4">
+                {{form_row(form.MontantUnitaire)}}
+            </div>
+        </div>
+        <br />
+        <div class="row">
+            <div class="col-lg-1 offset-lg-9">
+                <button type="submit" class="btn btn-danger">Annuler</button>
+            </div>
+            <div class="col-lg-1">
+                {{form_row(form.save)}}
+            </div>
+        </div>
+        {{ form_end(form)}}
+    </div>
+#}
+    <div class="jumbotron">
+        <h1>Ajouter une Indemnité</h1>
+        <hr class="my-4">
+        {{ form_start(form)}}
+        <div class="row">
+            <div class="col-lg-8">
+                {{form_row(form.Arret)}}
+            </div>
+        </div>
+        <hr />
+        <div class="row">
+            <div class="col-lg-4">
+                <p>IJSS restant : <b>{{ IJSSRestant }}</b></p><br/>
+                <p>IJ Prévoyance restant : <b>{{ IJPRestant }}</b></p>
+            </div>
+        </div>
+        <hr class="my-4">
+
+        {% if errors is defined %}
+        <div class="alert alert-danger" role="alert">
+            {{ errors|raw }}
+        </div>
+        {% endif %}
+
+        <div class="row">
+            <div class="col-lg-3">
+                {{form_row(form.type,{ 'label': 'Type'})}}
+            </div>
+            <div class="col-lg-3">
+                {{form_row(form.DateReception, {'label': 'Date de reception','attr' : {'placeholder': 'Date ...'}})}}
+            </div>
+            <div class="col-lg-3">
+                {{form_row(form.NbJour, {'label': 'Nombre de jour'} )}}
+            </div>
+            <div class="col-lg-3">
                 {{form_row(form.MontantUnitaire)}}
             </div>
         </div>

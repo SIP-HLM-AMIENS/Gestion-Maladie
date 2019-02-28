@@ -51,12 +51,14 @@
                             <th>50%</th>
                             <th>Ø</th>
                             <th>Carence</th>
+                            <th>Prel Src</th>
                         </tr>
                         <tr>
                             <td>{{ arret.rcent }}</td>
                             <td>{{ arret.rcinquante }}</td>
                             <td>{{ arret.rzero }}</td>
                             <td>{{ arret.rcarence }}</td>
+                            <td>{{ arret.prelSource}}</td>
                         </tr>
                     </table>
                 </div>
@@ -73,14 +75,19 @@
                             <th>50%</th>
                             <th>Ø</th>
                             <th>Carence</th>
+                            <th>Prel Src</th>
                         </tr>
                         <tr>
                             <td>{{ ArretProvisoire.rcent }}</td>
                             <td>{{ ArretProvisoire.rcinquante }}</td>
                             <td>{{ ArretProvisoire.rzero }}</td>
                             <td>{{ ArretProvisoire.rcarence }}</td>
+                            <td>{{ ArretProvisoire.prelSource }}</td>
                         </tr>
                     </table>
+                    {% if (arret.prevoyance == 0) and (ArretProvisoire.prevoyance == 1) %}
+                        <p><b> Attention, un dossier de prévoyance est à prévoir</b></p>
+                    {% endif %}
                 </div>
             </div>
         </div>

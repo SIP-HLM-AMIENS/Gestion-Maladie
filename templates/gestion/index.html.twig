@@ -87,11 +87,15 @@
                     </div>
                     <div class="modal-body">
                         <div class="container">
+                            <input type="hidden" id="idArret"></input>
                             <h5 class="text-center bg-dark">Employé</h5>
                             <br />
                             <div class="row">
                                 <div class="col-lg-6">
                                     <label for="#employé"> Employé :</label><input type="text" id="employé" size="50" readonly></input>
+                                </div>
+                                <div class="offset-lg-2 col-lg-2">
+                                    <label for="#clos"> Clos :</label><input type="text" id="clos" readonly></input>
                                 </div>
                             </div>
                             <br />
@@ -114,7 +118,8 @@
                                 <div class="col-lg-4">
                                 </div>
                                 <div class="col-lg-4">
-                                    <label for="#VisiteMedicale">Visite médicale :</label><input type="checkbox" id="VisiteMedicale" onclick="return false;"></label>
+                                    <label for="#VisiteMedicale">Visite médicale :</label><input type="checkbox" id="VisiteMedicale" onclick="return false;"></label><br/>
+                                    <label for="#Prevoyance">Prévoyance :</label><input type="checkbox" id='Prevoyance' onclick="return false;"></label>
                                 </div>
                             </div>
                             <br />
@@ -139,12 +144,14 @@
                                             <th>50%</th>
                                             <th>0</th>
                                             <th>carence</th>
+                                            <th>Prel Src</th>
                                         </tr>
                                         <tr>
                                             <td id="r100">0</td>
                                             <td id="r50">0</td>
                                             <td id="r0">0</td>
                                             <td id='carence'>0</td>
+                                            <td id='prelSource'>0</td>
                                         </tr>
                                     </table>
                                 </div>
@@ -186,7 +193,46 @@
                         </div>
                     </div>
                     <div class="modal-footer bg-primary">
+                        <button type="button" class="btn btn-danger" onclick="mettreLitige()">Litige</button>
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Fermer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="arretComModal" tabindex="-1" role="dialog" aria-labelledby="arretComModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-primary" style="color:white">
+                        <h5 class="modal-title" id="exampleModalLabel">Commentaires</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <table class="table table-bordered table-hover" id='tableComm'>
+                                    <thead>
+                                        <tr>
+                                            <th>user</th>
+                                            <th>date</th>
+                                            <th>message</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <hr />
+                        <div class="col-12">
+                            <h4>Ajouter un commentaire</h4>
+                            <textarea class="form-control" aria-label="With textarea" id="messageComm"></textarea>
+                        </div>
+                        <br />
+                        <div class="col-12">
+                            <a type="button" id="envoiComm" class="btn btn-primary" style="color:white">Ajouter</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -208,7 +254,7 @@
             var button = $(event.relatedTarget) // Button that triggered the modal
             var recipient = button.data('arret') // Extract info from data-* attributes
             // If necessary, you could initiate an AJAX request here (and then do the updating in a callback).
-            $url = "{{path('modal_contruction', { arretID: 'replace'})}}";
+            $url = "{{path('modalArret_contruction', { arretID: 'replace'})}}";
             $url = $url.replace('replace',recipient);
 
             $.ajax({
@@ -217,7 +263,21 @@
                 data: {}
             }).done(function(data){
                     var employé = data.matricule+ " - " + data.nom +" " + data.prenom;
+                    $('#idArret').val(recipient);
                     $('#employé').val(employé);
+                    if(data.clos == 1)
+                    {
+                    $('#clos').val("Clos");
+                    }
+                    else{
+                        if(data.clos == 2)
+                        {
+                            $('#clos').val("Litige");
+                        }
+                        else{
+                            $('#clos').val("Actif");
+                        }
+                    }
                     $('#dateEntrée').val(data.dateEntrée);
                     $('#anciennetée').val(data.anciennetée);
 
@@ -227,10 +287,12 @@
                     $('#NbJour').val(data.NbJour);
                     //$('#VisiteMedicale').val(data.VisiteMedicale);
                     $('#VisiteMedicale').prop('checked', data.VisiteMedicale);
+                    $('#Prevoyance').prop('checked', data.Prevoyance);
                     $('#r100').text(data.rcent);
                     $('#r50').text(data.rcinquante);
                     $('#r0').text(data.rzero);
                     $('#rcarence').text(data.carence);
+                    $('#prelSource').text(data.prelSource);
                     $('#tableProlon > tbody').empty()
                     $.each(data.prolongations,function(i) {
                         $('#tableProlon > tbody:last-child').append('<tr><td>'+this.type+'</td><td>'+this.dateIn+'</td><td>'+this.dateOut+'</tr>');
@@ -241,7 +303,6 @@
                         $('#tableIJSS > tbody:last-child').append('<tr><td>'+this.dateReception+'</td><td>'+this.NbJour+'</td><td>'+this.MontantUnitaire+'</tr>');
                     }
                     )
-
             });
 
 
@@ -258,6 +319,28 @@
             // Update the modal's content. We'll use jQuery here, but you could use a data binding library or other methods instead.
             console.log(recipient);
        });
+
+       $("#arretComModal").on('show.bs.modal', function (event) {
+            var button = $(event.relatedTarget) // Button that triggered the modal
+            var recipient = button.data('arret')
+            $url = "{{path('modalComm_contruction', { arretID: 'replace'})}}";
+            $url = $url.replace('replace',recipient);
+
+            $.ajax({
+                url:$url,
+                method: "POST",
+                data: {}
+            }).done(function(data){
+                $('#messageComm').empty();
+                $('#commentaires').text(data.commentaires);
+                $('#tableComm > tbody').empty()
+                $.each(data.commentaires,function(i) {
+                    $('#tableComm > tbody:last-child').append('<tr><td>'+this.user+'</td><td>'+this.date+'</td><td>'+this.message+'</tr>');
+                });
+                $('#envoiComm').unbind("click");
+                $('#envoiComm').on("click",function(){ envoyerCommentaire(recipient)});
+            });
+        });
 
 
 
@@ -303,6 +386,56 @@
                 data: {année: $année, mois: $mois, employé: $employé, motif: $motif}
             }).done(function(msg){
                 $('#test').html(msg);
+            });
+        }
+
+        function envoyerCommentaire($id, $user)
+        {
+            $message = $("#messageComm").val();
+            route = "{{path('ajout_commentaire', { id: 'xxx', message: 'yyy'})}}";
+            $url = route.replace("xxx",$id);
+            $url = $url.replace("yyy",$message);
+            $.ajax({
+                url: $url,
+                type: 'POST',
+                success: function(reponse) {
+                    console.log(reponse);
+
+                },		
+                error: function(jqXHR, status, error) {
+                    console.log(error);
+				}
+            });
+        }
+
+        function mettreLitige()
+        {
+            var $id = $("#idArret").val();
+            route = "{{path('toggleLitige', { id: 'xxx'})}}";
+            $url = route.replace("xxx",$id);
+            $.ajax({
+                url: $url,
+                type: 'POST',
+                success: function(reponse) {
+                    if(reponse == 1)
+                    {
+                        $('#clos').val("Clos");
+                    }
+                    else
+                    {
+                        if(reponse == 2)
+                        {
+                            $('#clos').val("Litige");
+                        }
+                        else
+                        {
+                            $('#clos').val("Actif");
+                        }
+                    }
+                },		
+                error: function(jqXHR, status, error) {
+                    console.log(error);
+				}
             });
         }
 
