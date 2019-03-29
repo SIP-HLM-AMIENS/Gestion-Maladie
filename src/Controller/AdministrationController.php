@@ -119,7 +119,7 @@ class AdministrationController extends AbstractController
      */
     public function integration(ObjectManager $manager, ArretCalcul $ar)
     {
-        $lignes = file("/home/dev/MonFichierArret.txt");
+        $lignes = file("/var/MonFichierArret.txt");
         foreach($lignes as $n => $line){
             $elements = explode(";",$line);
             echo "lignes : ".$elements[0]." - ".$elements[1]." - ".$elements[2]." - ".$elements[3]." - ".$elements[4]. "<br />";
