@@ -49,20 +49,25 @@ class EmployeRepository extends ServiceEntityRepository
     }
     */
 
-    public function findArretBefore24($id): array
+    public function findArretBefore24($id, $date): array
     {
-        $date = new \DATETIME;
-        $interval = new DateInterval('P2M');
+        //$date = new \DATETIME;
+        $interval = new DateInterval('P2Y');
         $date->sub($interval);
+        echo "DATE ------------------------------->".$date->format("d/m/y")."<br />";
 
 
         $qb = $this->createQueryBuilder('e')
             ->select('a')
             ->join('App\Entity\Arret','a')
+            ->join('App\Entity\Motif','m')
             ->where('e.id = :id')
             ->andWhere('a.DateOut >= :avant')
+            ->andWhere('a.motif = m')
+            ->andWhere('m.Court = :motif')
             ->setParameter('avant', $date)
             ->setParameter('id',$id)
+            ->setParameter('motif','AM')
             ->getQuery();
 
         return $qb->execute();

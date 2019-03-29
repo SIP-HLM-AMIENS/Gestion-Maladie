@@ -55,6 +55,31 @@ class Employe
     private $Coeff;
     public $anciennete;
 
+    /**
+     * @ORM\Column(type="string", length=5)
+     */
+    private $sexe;
+
+    /**
+     * @ORM\Column(type="date")
+     */
+    private $dateNaissance;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     */
+    private $poste;
+
+    /**
+     * @ORM\Column(type="date", nullable=true)
+     */
+    private $dateSortie;
+
+    /**
+     * @ORM\Column(type="date")
+     */
+    private $dateDebutAnc;
+
     public function __construct()
     {
         $this->arrets = new ArrayCollection();
@@ -171,5 +196,65 @@ class Employe
     public function __toString()
     {
         return (string) $this->getMatricule() . " - ".$this->getNom()." ".$this->getPrenom();
+    }
+
+    public function getSexe(): ?string
+    {
+        return $this->sexe;
+    }
+
+    public function setSexe(string $sexe): self
+    {
+        $this->sexe = $sexe;
+
+        return $this;
+    }
+
+    public function getDateNaissance(): ?\DateTimeInterface
+    {
+        return $this->dateNaissance;
+    }
+
+    public function setDateNaissance(\DateTimeInterface $dateNaissance): self
+    {
+        $this->dateNaissance = $dateNaissance;
+
+        return $this;
+    }
+
+    public function getPoste(): ?string
+    {
+        return $this->poste;
+    }
+
+    public function setPoste(string $poste): self
+    {
+        $this->poste = $poste;
+
+        return $this;
+    }
+
+    public function getDateSortie(): ?\DateTimeInterface
+    {
+        return $this->dateSortie;
+    }
+
+    public function setDateSortie(\DateTimeInterface $dateSortie): self
+    {
+        $this->dateSortie = $dateSortie;
+
+        return $this;
+    }
+
+    public function getDateDebutAnc(): ?\DateTimeInterface
+    {
+        return $this->dateDebutAnc;
+    }
+
+    public function setDateDebutAnc(\DateTimeInterface $dateDebutAnc): self
+    {
+        $this->dateDebutAnc = $dateDebutAnc;
+
+        return $this;
     }
 }

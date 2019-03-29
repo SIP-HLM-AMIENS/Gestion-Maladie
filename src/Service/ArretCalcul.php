@@ -26,8 +26,9 @@ class ArretCalcul
 
     public function calculRepartition($employe,$arret, $lda)
     {   
-        //Pas de carence si Arret travail
-        if($arret->getMotif()->getCourt() != 'AT')
+        $ListeCoeff = array("AT","MAT");
+        //Pas de carence si Arret travail et MAT
+        if(!(in_array($arret->getMotif()->getCourt(),$ListeCoeff)))
         {
             //calcul carence
             if(count($lda)>=2 and $arret->getMotif()->getCourt() != "HOS")
@@ -93,8 +94,9 @@ class ArretCalcul
 
     public function calculRepartitionPrev($employe,$arret,$lda,$nbjour)
     {   
-        //Pas de carence si Arret travail
-        if($arret->getMotif()->getCourt() != 'AT')
+        $ListeCoeff = array("AT","MAT");
+        //Pas de carence si Arret travail et MAT
+        if(!(in_array($arret->getMotif()->getCourt(),$ListeCoeff)))
         {
             //calcul carence
             if(count($lda)>=2 and $arret->getMotif()->getCourt() != "HOS")

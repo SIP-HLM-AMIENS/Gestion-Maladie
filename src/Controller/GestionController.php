@@ -63,6 +63,8 @@ class GestionController extends AbstractController
             ->setCurrentPage($page)
             ->getCurrentPageResults();
 
+
+
             //retourne le tableau filtrée
             return $this->render('gestion/tableauArret.html.twig', [
                 'arrets' => $arrets,
@@ -226,7 +228,8 @@ class GestionController extends AbstractController
 
             //Recherche des derniers arret pour le calcul de la carence
             $em = $this->getDoctrine()->getRepository(Employe::class);
-            $lda = $em->findArretBefore24($employe->getId());
+            $debut = clone $arret->getDateIn();
+            $lda = $em->findArretBefore24($employe->getId(),$debut);
 
             //calcul de la répartition
             $tab = $ar->calculRepartition($employe,$arret,$lda);
@@ -416,7 +419,8 @@ class GestionController extends AbstractController
 
             //Recherche des derniers arret pour le calcul de la carence
             $em = $this->getDoctrine()->getRepository(Employe::class);
-            $lda = $em->findArretBefore24($employe->getId());
+            $debut = clone $arret->getDateIn();
+            $lda = $em->findArretBefore24($employe->getId(),$debut);
 
             //calcul de la répartition
             $tab = $ar->calculRepartitionPrev($employe,$arret,$lda, $nbjourprev);
