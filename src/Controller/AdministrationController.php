@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use DateTime;
+use App\Entity\IJSS;
 use App\Entity\User;
 use App\Entity\Arret;
 use App\Entity\Motif;
@@ -195,6 +196,12 @@ class AdministrationController extends AbstractController
                 //calcul si présence d'un dossier prévoyance
                 $arret->setPrevoyance($ar->calculPrevoyance($arret,$employe));
 
+                //ajout des ijss
+                $IJSS = new IJSS();
+                $IJSS->setDateReception($arret->getDateOut());
+                $IJSS->setNbJour($arret->getNbreJour());
+                $IJSS->setMontantUnitaire(0,00);
+
                 //Persistance de l'arret
                 $manager->persist($prolongation);
                 $manager->persist($arret);
@@ -206,6 +213,55 @@ class AdministrationController extends AbstractController
                 //Création de la prolongation initial
                 $prolongation = new Prolongation();
                 $prolongation->setType("Prolongation");
+                $prolongation->setDateIn(new \DateTime($elements[3]));
+                $prolongation->setDateOut(new \DateTime($elements[4]));
+                $arret->addProlongation($prolongation);
+
+                //Calcul des nouvelles dates de l'arret
+                $arret->setDateOut($prolongation->getDateOut());
+                
+                $nbjourprev = $arret->getNbreJour() + ($prolongation->getDateIn()->diff($prolongation->getDateOut()))->format('%a')+1;
+
+                //Calcul visite Médicale
+                if( $nbjourprev >= 30 )
+                {
+                    $arret->setVisiteReprise(true);
+                }
+                else
+                {
+                    $arret->setVisiteReprise(false);
+                }
+
+                //calcul de l'anciennete de l'employé
+                $employe = $arret->getEmploye();
+                $employe->anciennete = $ar->diffMois($employe->getDateEntree(),$arret->getDateIn());
+
+                //Recherche des derniers arret pour le calcul de la carence
+                $em = $this->getDoctrine()->getRepository(Employe::class);
+                $debut = clone $arret->getDateIn();
+                $lda = $em->findArretBefore24($employe->getId(),$debut);
+
+                //calcul de la répartition
+                $tab = $ar->calculRepartitionPrev($employe,$arret,$lda, $nbjourprev);
+                $arret->setRcent($tab[0]);
+                $arret->setRcinquante($tab[1]);
+                $arret->setRzero($tab[2]);
+                $arret->setRcarence($tab[3]);
+                $arret->setPrelSource($ar->calculPrelSourcePrev($arret,$nbjourprev));
+
+                //calcul du dossier de prévoyance
+                $arret->setPrevoyance($ar->calculPrevoyancePrev($arret,$employe,$nbjourprev));
+                
+                $manager->persist($arret);
+                $manager->persist($prolongation);
+
+                $manager->flush();
+
+            }elseif($elements[1] =="Rechute")
+            {
+                //Création de la prolongation initial
+                $prolongation = new Prolongation();
+                $prolongation->setType("Rechute");
                 $prolongation->setDateIn(new \DateTime($elements[3]));
                 $prolongation->setDateOut(new \DateTime($elements[4]));
                 $arret->addProlongation($prolongation);
