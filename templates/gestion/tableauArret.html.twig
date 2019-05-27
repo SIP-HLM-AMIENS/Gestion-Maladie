@@ -53,29 +53,44 @@
     </table>
 
     {% if pager.haveToPaginate %}
+    <div class="col-6 offset-3">
         <ul class="pagination">
-
-            {# back #}
-            {% set state = '' %}
-            {% if  pager.getCurrentPage()  == 1 %}
-                {% set state = 'disabled' %}
-            {% endif %}
-            <li class="page-item {{ state }}"><a class="page-link" onclick="#">&laquo;</a></li>
-
             {# pages 1 2 3 ... #}
-            {% for givenPage in 1..pager.getNbPages() %}
-                {% set state = '' %}
-                {% if  pager.getCurrentPage()  == givenPage %}
-                    {% set state = 'active' %}
-                {% endif %}
-                <li class="page-item {{ state }}"><a class="page-link" onclick="changerPageFiltre({{ givenPage }})"> {{ givenPage }}</a></li>
-            {%  endfor %}
-
-            {# forward #}
-            {% set state = '' %}
-            {% if  pager.getCurrentPage() == pager.getNbPages() %}
-                {% set state = 'disabled' %}
+            {% if pager.getCurrentPage()<=4 %}
+                {% for givenPage in 1..pager.getCurrentPage()+2 %}
+                    {% set state = '' %}
+                    {% if  pager.getCurrentPage()  == givenPage %}
+                        {% set state = 'active' %}
+                    {% endif %}
+                    <li class="page-item {{ state }}"><a class="page-link" onclick="changerPageFiltre({{ givenPage }})"> {{ givenPage }}</a></li>
+                {%  endfor %}
+                <li class="page-item disabled">...</li>
+                <li class="page-item active"><a class="page-link" onclick="changerPageFiltre({{ pager.getNbPages()}})">{{pager.getNbPages()}}</a></li>
+            {% elseif pager.getCurrentPage() >= pager.getNbPages()-2 %}
+                <li class="page-item active"><a class="page-link" onclick="changerPageFiltre(1)">1</a></li>
+                <li class="page-item disabled">...</li>
+                {% for givenPage in pager.getCurrentPage()-2..pager.getNbPages() %}
+                    {% set state = '' %}
+                    {% if  pager.getCurrentPage()  == givenPage %}
+                        {% set state = 'active' %}
+                    {% endif %}
+                    <li class="page-item {{ state }}"><a class="page-link" onclick="changerPageFiltre({{ givenPage }})"> {{ givenPage }}</a></li>
+                {%  endfor %}
+            {% else %}
+                <li class="page-item active"><a class="page-link" onclick="changerPageFiltre(1)">1</a></li>
+                <li class="page-item disabled">...</li>
+                {% for givenPage in pager.getCurrentPage()-2..pager.getCurrentPage()+2 %}
+                    {% set state = '' %}
+                    {% if  pager.getCurrentPage()  == givenPage %}
+                        {% set state = 'active' %}
+                    {% endif %}
+                    <li class="page-item {{ state }}"><a class="page-link" onclick="changerPageFiltre({{ givenPage }})"> {{ givenPage }}</a></li>
+                {%  endfor %}
+                <li class="page-item disabled">...</li>
+                <li class="page-item active"><a class="page-link" onclick="changerPageFiltre({{ pager.getNbPages()}})">{{pager.getNbPages()}}</a></li>
             {% endif %}
-            <li class="page-item {{ state }}" ><a class="page-link" onclick="#">&raquo;</a></li>
         </ul>
+        </div>
     {% endif %}
+
+    {# pagerfanta(pager, 'twitter_bootstrap', { 'proximity': 5}) #}
