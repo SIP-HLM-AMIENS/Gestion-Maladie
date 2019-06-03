@@ -41,9 +41,11 @@ class GestionController extends AbstractController
             $mois = $req->request->get('mois');
             $filtreEmployé = $req->request->get('employé');
             $filtreMotif = $req->request->get('motif');
+            $filtreEtat = $req->request->get('etat');
             
+            echo $filtreEtat ;
             //recherche en fonction des filtres
-            $arrets = $this->filtreLesArrets($année, $mois, $filtreEmployé, $filtreMotif);
+            $arrets = $this->filtreLesArrets($année, $mois, $filtreEmployé, $filtreMotif, $filtreEtat);
 
             //execution de requêtes de recherche
 
@@ -64,7 +66,6 @@ class GestionController extends AbstractController
             ->getCurrentPageResults();
 
 
-
             //retourne le tableau filtrée
             return $this->render('gestion/tableauArret.html.twig', [
                 'arrets' => $arrets,
@@ -73,7 +74,8 @@ class GestionController extends AbstractController
         }
         else
         {
-            $arrets = $this->getDoctrine()->getRepository(Arret::class)->findAll();
+            //$arrets = $this->getDoctrine()->getRepository(Arret::class)->findAll();
+            $arrets = $this->filtreLesArrets('0', '0', '0', '0', 'saufClos');
             $employes = $this->getDoctrine()->getRepository(Employe::class)->findAll();
             $motifs = $this->getDoctrine()->getRepository(Motif::class)->findAll();
             
@@ -117,9 +119,10 @@ class GestionController extends AbstractController
             $mois = $req->request->get('mois');
             $filtreEmployé = $req->request->get('employé');
             $filtreMotif = $req->request->get('motif');
+            $filtreEtat = $req->request->get('etat');
             
             //recherche en fonction des filtres
-            $arrets = $this->filtreLesArrets($année, $mois, $filtreEmployé, $filtreMotif);
+            $arrets = $this->filtreLesArrets($année, $mois, $filtreEmployé, $filtreMotif, $filtreEtat);
 
             //execution de requêtes de recherche
 
@@ -751,7 +754,7 @@ class GestionController extends AbstractController
     }
 
 
-    private function filtreLesArrets($année, $mois, $filtreEmployé, $filtreMotif)
+    private function filtreLesArrets($année, $mois, $filtreEmployé, $filtreMotif, $filtreEtat)
     {
         if($filtreEmployé <> '0')
             $employé = $this->getDoctrine()->getRepository(Employe::class)->findOneBy(['Matricule' => $filtreEmployé]);  
@@ -762,10 +765,33 @@ class GestionController extends AbstractController
             $motif = $this->getDoctrine()->getRepository(Motif::class)->find($filtreMotif);
         else
             $motif = null;
-
-        if($année <> '0' ||$employé <> null || $motif <> null)
+        
+        if($filtreEtat <> '0')
         {
-            $arrets = $this->getDoctrine()->getRepository(Arret::class)->findArretBy($année, $mois, $employé, $motif);
+            switch($filtreEtat)
+            {
+                case 'actif':
+                    $etat=array(0);
+                    break;
+                
+                case 'clos':
+                    $etat=array(1);
+                    break;
+                
+                case 'litige':
+                    $etat= array(2);
+                    break;
+                
+                case 'saufClos':
+                    $etat= array(0,2);
+            }
+        }
+        else
+            $etat=null;
+
+        if($année <> '0' ||$employé <> null || $motif <> null || $etat <> null)
+        {
+            $arrets = $this->getDoctrine()->getRepository(Arret::class)->findArretBy($année, $mois, $employé, $motif, $etat);
         }
         else
         {

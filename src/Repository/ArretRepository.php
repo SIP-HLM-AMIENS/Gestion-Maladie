@@ -21,7 +21,7 @@ class ArretRepository extends ServiceEntityRepository
         parent::__construct($registry, Arret::class);
     }
 
-    public function findArretBy(string $year='0', string $month='0', Employe $employe = null, Motif $motif = null): array
+    public function findArretBy(string $year='0', string $month='0', Employe $employe = null, Motif $motif = null, array $etat = null): array
     {   
         $dql = "SELECT a from App\Entity\Arret a";
         $condition=false;
@@ -63,6 +63,19 @@ class ArretRepository extends ServiceEntityRepository
             }
         }
 
+        if($etat<>null)
+        {
+            if($condition)
+            {
+                $dql .=" AND a.clos in (:etats) ";
+            }
+            else
+            {
+                $dql .=" WHERE a.clos in (:etats) ";
+                $condition= true;
+            }
+        }
+
         $query = $this->getEntityManager()->createQuery($dql);
         if($employe<>null)
         {
@@ -71,6 +84,10 @@ class ArretRepository extends ServiceEntityRepository
         if($motif<>null)
         {
             $query = $query->setParameter('motif',$motif);
+        }
+        if($etat<>null)
+        {
+            $query = $query->setParameter('etats',$etat);
         }
         return $query->execute();
     }

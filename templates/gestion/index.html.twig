@@ -63,6 +63,14 @@
                                     <option value='{{motif.id}}'>{{motif}}</option>
                                 {% endfor %}
                             </select>
+                            <label for="selectEtat">Etat</label>
+                            <select class="form-control" id="selectEtat">
+                                <option value='0'>Tous</option>
+                                <option value='actif'>Actif</option>
+                                <option value='clos'>Clos</option>
+                                <option value='litige'>Litige</option>
+                                <option value='saufClos' selected>Sauf clos</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -353,6 +361,7 @@
             $mois = $('#selectMois').val();
             $employé = $('#selectEmployé').val();
             $motif = $('#selectMotif').val();
+            $etat = $('#selectEtat').val();
 
             modal = $('#exampleModal');
  
@@ -364,7 +373,7 @@
             $.ajax({
                 url:"{{path('filtre')}}",
                 method: "POST",
-                data: {année: $année, mois: $mois, employé: $employé, motif: $motif}
+                data: {année: $année, mois: $mois, employé: $employé, motif: $motif, etat: $etat}
             }).done(function(msg){
                 $('#test').html(msg);
             });
@@ -377,13 +386,14 @@
             $mois = $('#selectMois').val();
             $employé = $('#selectEmployé').val();
             $motif = $('#selectMotif').val();
+            $etat = $('#selectEtat').val();
             $url = "{{path('filtre_paginated', { page: 'replace'})}}";
             $url = $url.replace('replace',$page);
 
             $.ajax({
                 url:$url,
                 method: "POST",
-                data: {année: $année, mois: $mois, employé: $employé, motif: $motif}
+                data: {année: $année, mois: $mois, employé: $employé, motif: $motif, etat: $etat}
             }).done(function(msg){
                 $('#test').html(msg);
             });

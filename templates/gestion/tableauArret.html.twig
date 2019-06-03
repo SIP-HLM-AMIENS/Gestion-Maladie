@@ -56,7 +56,15 @@
     <div class="col-6 offset-3">
         <ul class="pagination">
             {# pages 1 2 3 ... #}
-            {% if pager.getCurrentPage()<=4 %}
+            {% if pager.getNbPages() <= 3 %}
+                {% for givenPage in 1..pager.getNbPages() %}
+                    {% set state = '' %}
+                    {% if  pager.getCurrentPage()  == givenPage %}
+                        {% set state = 'active' %}
+                    {% endif %}
+                    <li class="page-item {{ state }}"><a class="page-link" onclick="changerPageFiltre({{ givenPage }})"> {{ givenPage }}</a></li>
+                {%  endfor %}
+            {% elseif pager.getCurrentPage()<=4%}
                 {% for givenPage in 1..pager.getCurrentPage()+2 %}
                     {% set state = '' %}
                     {% if  pager.getCurrentPage()  == givenPage %}
