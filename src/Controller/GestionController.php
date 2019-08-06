@@ -76,7 +76,7 @@ class GestionController extends AbstractController
         {
             //$arrets = $this->getDoctrine()->getRepository(Arret::class)->findAll();
             $arrets = $this->filtreLesArrets('0', '0', '0', '0', 'saufClos');
-            $employes = $this->getDoctrine()->getRepository(Employe::class)->findAll();
+            $employes = $this->getDoctrine()->getRepository(Employe::class)->findBy(array(),array('Nom' => 'asc'));
             $motifs = $this->getDoctrine()->getRepository(Motif::class)->findAll();
             
             foreach ($arrets as $arret)
