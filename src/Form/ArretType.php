@@ -3,10 +3,13 @@
 namespace App\Form;
 
 use App\Entity\Arret;
+use App\Entity\Employe;
+use App\Repository\EmployeRepository;
 use Symfony\Component\Form\FormEvent;
 use Symfony\Component\Form\FormEvents;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
@@ -28,7 +31,13 @@ class ArretType extends AbstractType
                 'format' => 'dd/MM/yyyy',
                 'attr' => ['class' => 'js-datepicker']
             ))
-            ->add('employe')
+            ->add('employe', EntityType::class, [
+                'class' => Employe::class,
+                'query_builder' => function (EmployeRepository $er) {
+                    return $er->createQueryBuilder('e')
+                        ->orderBy('e.Nom', 'ASC');
+                }
+            ])
             ->add('motif')
             ->add('load', SubmitType::class, array('label' => 'Charger', 'attr' => ['class' => 'btn btn-primary']));
             

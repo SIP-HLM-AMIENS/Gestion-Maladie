@@ -186,7 +186,7 @@ class GestionController extends AbstractController
      */
     public function employes()
     {
-        $employes = $this->getDoctrine()->getRepository(Employe::class)->findAll();
+        $employes = $this->getDoctrine()->getRepository(Employe::class)->findBy(array(),array('Nom' => 'asc'));
 
         return $this->render('gestion/employes.html.twig',[
             'employes' => $employes
