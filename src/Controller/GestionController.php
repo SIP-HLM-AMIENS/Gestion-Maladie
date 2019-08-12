@@ -382,7 +382,7 @@ class GestionController extends AbstractController
      * @Route("/gestion/prolongation/add/{arretId}", name="prolongation_add")
      * @Security("has_role('ROLE_USER')")
      */
-    public function AjouterPrologation(Request $req,ArretCalcul $ar,ObjectManager $manager, $arretId)
+    public function AjouterPrologation(Request $req,ArretCalcul $ar,ObjectManager $manager, $arretId, \Swift_Mailer $mailer)
     {
         $prolongation = new Prolongation();        
 
