@@ -72,16 +72,19 @@
         {% endif %}
 
         <div class="row">
-            <div class="col-lg-3">
+            <div class="col-lg-2">
                 {{form_row(form.type,{ 'label': 'Type'})}}
             </div>
             <div class="col-lg-3">
                 {{form_row(form.DateReception, {'label': 'Date de reception','attr' : {'placeholder': 'Date ...'}})}}
             </div>
-            <div class="col-lg-3">
-                {{form_row(form.NbJour, {'label': 'Nombre de jour'} )}}
+            <div class="col-lg-2">
+                {{form_row(form.carence,{'label': 'Carence'} )}}
             </div>
             <div class="col-lg-3">
+                {{form_row(form.NbJour, {'label': 'Nombre de jours indemnisés'} )}}
+            </div>
+            <div class="col-lg-2">
                 {{form_row(form.MontantUnitaire)}}
             </div>
         </div>

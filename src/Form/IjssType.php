@@ -11,6 +11,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 
 class IjssType extends AbstractType
 {
@@ -29,6 +30,9 @@ class IjssType extends AbstractType
                 'html5' => false,
                 'format' => 'dd/MM/yyyy',
                 'attr' => ['class' => 'js-datepicker']
+            ))
+            ->add('carence', IntegerType::class, array(
+                'data' => 0
             ))
             ->add('NbJour')
             ->add('MontantUnitaire')

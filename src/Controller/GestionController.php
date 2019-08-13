@@ -311,7 +311,8 @@ class GestionController extends AbstractController
                     'id' => $IJ->getId(),
                     'dateReception' => $IJ->getDateReception()->format("d/m/Y"),
                     'NbJour' => $IJ->getNbJour(),
-                    'MontantUnitaire' => $IJ->getMontantUnitaire()
+                    'MontantUnitaire' => $IJ->getMontantUnitaire(),
+                    'carence' => $IJ->getCarence()
                 );
             }
 
@@ -601,12 +602,12 @@ class GestionController extends AbstractController
         foreach($arret->getIJSS() as $IJ)
         {
             if($IJ->getType() == 'ijss')
-                $totalIJSS += $IJ->getNbJour();
+                $totalIJSS += ($IJ->getNbJour()+$IJ->getCarence());
             elseif($IJ->getType() =='ijp')
-                $totalIJP += $IJ->getNbJour();
+                $totalIJP += ($IJ->getNbJour()+$IJ->getCarence());
         }
 
-        $joursRestantIJSS = $arret->getNbreJour() - $totalIJSS;
+        $joursRestantIJSS = $arret->getNbreJour()- $totalIJSS;
         $jourRestantIJP = $arret->getIJP() - $totalIJP;
         ////////////////////
 
@@ -620,7 +621,7 @@ class GestionController extends AbstractController
             if($IJSS->getType() == "ijss")
             {
                 //ajout des nombre de jour de l'actuel
-                $totalIJSS += $IJSS->getNbJour();
+                $totalIJSS += $IJSS->getNbJour() + $IJSS->getCarence();
                 
                 //Controle sur le nombre de jour
                 if($totalIJSS > $arret->getNbreJour())
@@ -632,7 +633,7 @@ class GestionController extends AbstractController
             elseif($IJSS->getType() =="ijp")
             {
                 //ajout des nombre de jour de l'actuel
-                $totalIJP += $IJSS->getNbJour();
+                $totalIJP += $IJSS->getNbJour() + $IJSS->getCarence();
                 
                 //Controle sur le nombre de jour
                 if($totalIJP > $arret->getIJP())
@@ -802,8 +803,8 @@ class GestionController extends AbstractController
 
     private function EnvoyerMail(\Swift_Mailer $mailer)
     {
-        $message = (new \Swift_Message('Shooting Photo'))
-        ->setFrom('Leconte.kevin@sip-picardie.com')
+        $message = (new \Swift_Message('Visite médicale'))
+        ->setFrom('flotte.auto@sip-picardie.com')
         ->setTo('Leconte.kevin@sip-picardie.com')
         ->setBody(
             $this->renderView(

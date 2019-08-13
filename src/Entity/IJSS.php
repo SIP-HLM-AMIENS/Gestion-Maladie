@@ -41,6 +41,11 @@ class IJSS
      */
     private $type;
 
+    /**
+     * @ORM\Column(type="integer")
+     */
+    private $carence;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -102,6 +107,18 @@ class IJSS
     public function setType(string $type): self
     {
         $this->type = $type;
+
+        return $this;
+    }
+
+    public function getCarence(): ?int
+    {
+        return $this->carence;
+    }
+
+    public function setCarence(int $carence): self
+    {
+        $this->carence = $carence;
 
         return $this;
     }
