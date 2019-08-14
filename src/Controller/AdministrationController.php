@@ -220,8 +220,8 @@ class AdministrationController extends AbstractController
                 //Calcul des nouvelles dates de l'arret
                 $arret->setDateOut($prolongation->getDateOut());
                 
-                $nbjourprev = $arret->getNbreJour() + ($prolongation->getDateIn()->diff($prolongation->getDateOut()))->format('%a')+1;
-
+                $nbjourprev = $arret->getNbreJour();// + ($prolongation->getDateIn()->diff($prolongation->getDateOut()))->format('%a')+1;
+                echo($nbjourprev. " - ".$arret->getNbreJour());
                 //Calcul visite Médicale
                 if( $nbjourprev >= 30 )
                 {
@@ -269,7 +269,7 @@ class AdministrationController extends AbstractController
                 //Calcul des nouvelles dates de l'arret
                 $arret->setDateOut($prolongation->getDateOut());
                 
-                $nbjourprev = $arret->getNbreJour() + ($prolongation->getDateIn()->diff($prolongation->getDateOut()))->format('%a')+1;
+                $nbjourprev = $arret->getNbreJour();
 
                 //Calcul visite Médicale
                 if( $nbjourprev >= 30 )
