@@ -230,12 +230,12 @@ class GestionController extends AbstractController
             $employe->anciennete = $ar->diffMois($employe->getDateEntree(),new \DateTime);
 
             //Recherche des derniers arret pour le calcul de la carence
-            $em = $this->getDoctrine()->getRepository(Employe::class);
+            $am = $this->getDoctrine()->getRepository(Arret::class);
             $debut = clone $arret->getDateIn();
-            $lda = $em->findArretBefore24($employe->getId(),$debut);
+            $lda = $am->findArretBefore24($employe->getId(),$debut);
 
             //calcul de la répartition
-            $tab = $ar->calculRepartition($employe,$arret,$lda);
+            $tab = $ar->calculRepartitionAvecMaintien($employe,$arret,$lda);
             $arret->setRcent($tab[0]);
             $arret->setRcinquante($tab[1]);
             $arret->setRzero($tab[2]);
@@ -422,12 +422,12 @@ class GestionController extends AbstractController
             $employe->anciennete = $ar->diffMois($employe->getDateEntree(),new \DateTime);
 
             //Recherche des derniers arret pour le calcul de la carence
-            $em = $this->getDoctrine()->getRepository(Employe::class);
+            $am = $this->getDoctrine()->getRepository(Arret::class);
             $debut = clone $arret->getDateIn();
-            $lda = $em->findArretBefore24($employe->getId(),$debut);
+            $lda = $am->findArretBefore24Prev($employe->getId(),$debut,$arretId);
 
             //calcul de la répartition
-            $tab = $ar->calculRepartitionPrev($employe,$arret,$lda, $nbjourprev);
+            $tab = $ar->calculRepartitionPrevAvecMaintien($employe,$arret,$lda, $nbjourprev);
             $arret->setRcent($tab[0]);
             $arret->setRcinquante($tab[1]);
             $arret->setRzero($tab[2]);
@@ -524,11 +524,12 @@ class GestionController extends AbstractController
             $employe->anciennete = $ar->diffMois($employe->getDateEntree(),new \DateTime);
 
             //Recherche des derniers arret pour le calcul de la carence
-            $em = $this->getDoctrine()->getRepository(Employe::class);
-            $lda = $em->findArretBefore24($employe->getId());
+            $am = $this->getDoctrine()->getRepository(Arret::class);
+            $debut = clone $arret->getDateIn();
+            $lda = $am->findArretBefore24Prev($employe->getId(),$debut,$arretId);
 
             //calcul de la répartition
-            $tab = $ar->calculRepartitionPrev($employe,$arret,$lda, $nbjourprev);
+            $tab = $ar->calculRepartitionPrevAvecMaintien($employe,$arret,$lda, $nbjourprev);
             $arret->setRcent($tab[0]);
             $arret->setRcinquante($tab[1]);
             $arret->setRzero($tab[2]);

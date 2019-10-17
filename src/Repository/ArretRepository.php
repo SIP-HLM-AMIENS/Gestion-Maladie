@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use DateInterval;
 use App\Entity\Arret;
 use App\Entity\Motif;
 use App\Entity\Employe;
@@ -91,6 +92,51 @@ class ArretRepository extends ServiceEntityRepository
         }
         return $query->execute();
     }
+
+    public function findOldArret(Employe $employe): array
+    {
+        $dql = "SELECT a from App\Entity\Arret a";
+        $dql .= " WHERE a.employe = :employe";
+        $query = $this->getEntityManager()->createQuery($dql);
+        $query = $query->setParameter('employe',$employe);
+        return $query->execute();
+    }
+
+    public function findArretBefore24($id, $date): array
+    {
+        //$date = new \DATETIME;
+        $interval = new DateInterval('P2Y');
+        $date->sub($interval);
+        $dql = "SELECT a from App\Entity\Arret a ";
+        $dql .= "JOIN a.employe e ";
+        $dql .= "JOIN a.motif m ";
+        $dql .= "WHERE e.id = :id AND a.DateOut >= :avant And m.Court = 'AM'";
+
+        $query = $this->getEntityManager()->createQuery($dql);
+        $query = $query->setParameter('id', $id);
+        $query = $query->setParameter('avant', $date);
+        return $query->execute();
+
+
+    }
+    public function findArretBefore24Prev($id, $date, $arret): array
+    {
+        //$date = new \DATETIME;
+        $interval = new DateInterval('P2Y');
+        $date->sub($interval);
+        $dql = "SELECT a from App\Entity\Arret a ";
+        $dql .= "JOIN a.employe e ";
+        $dql .= "JOIN a.motif m ";
+        $dql .= "WHERE e.id = :id AND a.DateOut >= :avant And m.Court = 'AM' And a.id <> :arret";
+
+        $query = $this->getEntityManager()->createQuery($dql);
+        $query = $query->setParameter('id', $id);
+        $query = $query->setParameter('avant', $date);
+        $query = $query->setParameter('arret', $arret);
+        return $query->execute();
+
+    }
+    
 
 
 //    /**
