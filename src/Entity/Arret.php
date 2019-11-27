@@ -96,6 +96,11 @@ class Arret
      */
     private $commentaires;
 
+    /**
+     * @ORM\ManyToOne(targetEntity="App\Entity\Maintien", inversedBy="arrets")
+     */
+    private $maintien;
+
     public function __construct()
     {
         $this->prolongations = new ArrayCollection();
@@ -387,6 +392,18 @@ class Arret
                 $commentaire->setArret(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getMaintien(): ?Maintien
+    {
+        return $this->maintien;
+    }
+
+    public function setMaintien(?Maintien $maintien): self
+    {
+        $this->maintien = $maintien;
 
         return $this;
     }

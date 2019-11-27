@@ -110,7 +110,7 @@ class ArretRepository extends ServiceEntityRepository
         $dql = "SELECT a from App\Entity\Arret a ";
         $dql .= "JOIN a.employe e ";
         $dql .= "JOIN a.motif m ";
-        $dql .= "WHERE e.id = :id AND a.DateOut >= :avant And m.Court = 'AM'";
+        $dql .= "WHERE e.id = :id AND a.DateOut >= :avant And m.Court not in ('AT','MAT')";
 
         $query = $this->getEntityManager()->createQuery($dql);
         $query = $query->setParameter('id', $id);

@@ -33,6 +33,11 @@ class Service
      */
     private $employes;
 
+    /**
+     * @ORM\ManyToOne(targetEntity="App\Entity\Direction", inversedBy="services")
+     */
+    private $direction;
+
     public function __construct()
     {
         $this->employes = new ArrayCollection();
@@ -94,6 +99,23 @@ class Service
                 $employe->setService(null);
             }
         }
+
+        return $this;
+    }
+
+    public function __toString()
+    {
+        return (string) $this->getNom();
+    }
+
+    public function getDirection(): ?Direction
+    {
+        return $this->direction;
+    }
+
+    public function setDirection(?Direction $direction): self
+    {
+        $this->direction = $direction;
 
         return $this;
     }

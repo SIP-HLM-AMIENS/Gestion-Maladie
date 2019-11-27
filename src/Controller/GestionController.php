@@ -10,6 +10,8 @@ use App\Entity\Motif;
 use App\Form\IjssType;
 use App\Entity\Employe;
 use App\Form\ArretType;
+use App\Entity\Maintien;
+use App\Form\EmployeType;
 use Pagerfanta\Pagerfanta;
 use App\Entity\Commentaire;
 use App\Entity\Prolongation;
@@ -194,15 +196,36 @@ class GestionController extends AbstractController
     }
 
     /**
+     * @Route("/gestion/employes/ajout", name="ajout_employes")
+     * @Security("has_role('ROLE_USER')")
+     */
+    public function ajoutEmployes(Request $request, ObjectManager $manager)
+    {  
+        $employe = new Employe();
+        $form = $this->createForm(EmployeType::class, $employe);
+        $form->handleRequest($request);
+
+        if($form->isSubmitted() && $form->isValid())
+        {                   
+            $manager->persist($employe);
+            $manager->flush();
+        }
+
+
+        return $this->render('gestion/ajoutEmploye.html.twig',[
+            'form' => $form->createView()
+        ]);
+    }
+
+
+    /**
      * @Route("/gestion/arret/ajout", name="gestion_arret_ajout")
      * @Security("has_role('ROLE_USER')")
      */
     public function ajoutArret(Request $request, ObjectManager $manager, ArretCalcul $ar, \Swift_Mailer $mailer)
     {
         $arret = new Arret();
-
         $form = $this->createForm(ArretType::class, $arret);
-
         $form->handleRequest($request);
 
         if($form->isSubmitted() && $form->isValid())
@@ -214,7 +237,6 @@ class GestionController extends AbstractController
             $prolongation->setDateOut($arret->getDateOut());
             $arret->addProlongation($prolongation);
             
-
             //Calcul visite Médicale
             if( $arret->getNbreJour() >= 30 )
             {
@@ -229,13 +251,43 @@ class GestionController extends AbstractController
             $employe = $arret->getEmploye();
             $employe->anciennete = $ar->diffMois($employe->getDateEntree(),new \DateTime);
 
-            //Recherche des derniers arret pour le calcul de la carence
+            //Recherche des derniers arrets pour le calcul de la carence
             $am = $this->getDoctrine()->getRepository(Arret::class);
             $debut = clone $arret->getDateIn();
             $lda = $am->findArretBefore24($employe->getId(),$debut);
+            //$arret->setRcarence();
+
+            //Calcul pour la recherche du maintien
+            $mr = $this->getDoctrine()->getRepository(Maintien::class);
+            $dernierMaintien = $mr->findLast($employe);
+            $dateLimite = clone $arret->getDateIn(); 
+            $dateLimite->sub(new DateInterval('P1Y'));// - 1 an
+            if($dernierMaintien == null)
+            {
+                $maintien  = new Maintien();
+                $maintien->setDateCreation(clone $arret->getDateIn());
+                $maintien->setEmploye($employe);
+            }
+            else
+            {
+                if($dernierMaintien->getDateFin()<= $dateLimite)
+                {
+                    $maintien  = new Maintien();
+                    $maintien->setDateCreation(clone $arret->getDateIn());
+                    $maintien->setEmploye($employe);
+                }
+                else
+                {
+                    //Continuation du maintien
+                    $maintien = $dernierMaintien;
+                }
+            }
+            
+            $arret->setMaintien($maintien);
 
             //calcul de la répartition
-            $tab = $ar->calculRepartitionAvecMaintien($employe,$arret,$lda);
+            //$tab = $ar->calculRepartitionAvecMaintien($employe,$arret,$lda);
+            $tab = $ar->calculRepartitionCreation($arret,$employe,$lda);
             $arret->setRcent($tab[0]);
             $arret->setRcinquante($tab[1]);
             $arret->setRzero($tab[2]);
@@ -243,12 +295,32 @@ class GestionController extends AbstractController
             $arret->setClos(0);
             $arret->setPrelSource($ar->calculPrelSource($arret));
 
+            //Mise à jour répartition
+            $ListeCoeff = array("AT","MAT","ATJ","MP","MTT");
+            if(!(in_array($arret->getMotif()->getCourt(),$ListeCoeff)))
+            {
+                $maintien->setNb100($maintien->getNb100() + $arret->getRcent());
+                $maintien->setNb50($maintien->getNb50() + $arret->getRcinquante());
+                if($arret->getRzero() == 0)
+                {
+                    $maintien->setDateFin(clone $arret->getDateOut());
+                }
+                else
+                {
+                    $nbJourMaintenu = $arret->getRcent() + $arret->getRcinquante() ;
+                    $dateFinMaintien = clone $arret->getDateIn()->add(new DateInterval('P'.$nbJourMaintenu.'D'));
+                    $maintien->setDateFin($dateFinMaintien);
+                }
+            }
+
             //calcul si présence d'un dossier prévoyance
             $arret->setPrevoyance($ar->calculPrevoyance($arret,$employe));
 
             //Persistance de l'arret
             $manager->persist($prolongation);
+            $manager->persist($maintien);
             $manager->persist($arret);
+
 
             if($form->get('load')->isClicked())
             {
@@ -312,7 +384,8 @@ class GestionController extends AbstractController
                     'dateReception' => $IJ->getDateReception()->format("d/m/Y"),
                     'NbJour' => $IJ->getNbJour(),
                     'MontantUnitaire' => $IJ->getMontantUnitaire(),
-                    'carence' => $IJ->getCarence()
+                    'carence' => $IJ->getCarence(),
+                    'type' => $IJ->getType()
                 );
             }
 
@@ -383,7 +456,7 @@ class GestionController extends AbstractController
      * @Route("/gestion/prolongation/add/{arretId}", name="prolongation_add")
      * @Security("has_role('ROLE_USER')")
      */
-    public function AjouterPrologation(Request $req,ArretCalcul $ar,ObjectManager $manager, $arretId, \Swift_Mailer $mailer)
+    public function AjouterProlongation(Request $req,ArretCalcul $ar,ObjectManager $manager, $arretId, \Swift_Mailer $mailer)
     {
         $prolongation = new Prolongation();        
 
@@ -405,7 +478,9 @@ class GestionController extends AbstractController
             //Calcul des nouvelles dates de l'arret
             $arret->setDateOut($prolongation->getDateOut());
             
-            $nbjourprev = $arret->getNbreJour() + ($prolongation->getDateIn()->diff($prolongation->getDateOut()))->format('%a')+1;
+            $nbjourProlo = $prolongation->getDateIn()->diff($prolongation->getDateOut())->format('%a')+1;
+            $nbjourprev = $arret->getNbreJour() + $nbjourProlo;
+            
 
             //Calcul visite Médicale
             if( $nbjourprev >= 30 )
@@ -427,12 +502,31 @@ class GestionController extends AbstractController
             $lda = $am->findArretBefore24Prev($employe->getId(),$debut,$arretId);
 
             //calcul de la répartition
-            $tab = $ar->calculRepartitionPrevAvecMaintien($employe,$arret,$lda, $nbjourprev);
+            $tab = $ar->calculRepartitionProlongation($arret,$employe,$lda, $nbjourprev);
             $arret->setRcent($tab[0]);
             $arret->setRcinquante($tab[1]);
             $arret->setRzero($tab[2]);
             $arret->setRcarence($tab[3]);
             $arret->setPrelSource($ar->calculPrelSourcePrev($arret,$nbjourprev));
+
+            //Mise à jour répartition
+            $ListeCoeff = array("AT","MAT","ATJ","MP","MTT");
+            if(!(in_array($arret->getMotif()->getCourt(),$ListeCoeff)))
+            {
+                $maintien->setNb100($maintien->getNb100() + $arret->getRcent());
+                $maintien->setNb50($maintien->getNb50() + $arret->getRcinquante());
+                if($arret->getRzero() == 0)
+                {
+                    $maintien->setDateFin(clone $arret->getDateOut());
+                }
+                else
+                {
+                    $nbJourMaintenu = $arret->getRcent() + $arret->getRcinquante() ;
+                    $dateFinMaintien = clone $arret->getDateIn()->add(new DateInterval('P'.$nbJourMaintenu.'D'));
+                    $maintien->setDateFin($dateFinMaintien);
+                }
+            }
+
 
             //calcul du dossier de prévoyance
             $arret->setPrevoyance($ar->calculPrevoyancePrev($arret,$employe,$nbjourprev));
@@ -529,12 +623,30 @@ class GestionController extends AbstractController
             $lda = $am->findArretBefore24Prev($employe->getId(),$debut,$arretId);
 
             //calcul de la répartition
-            $tab = $ar->calculRepartitionPrevAvecMaintien($employe,$arret,$lda, $nbjourprev);
+            $tab = $ar->calculRepartitionProlongation($arret,$employe,$lda, $nbjourprev);
             $arret->setRcent($tab[0]);
             $arret->setRcinquante($tab[1]);
             $arret->setRzero($tab[2]);
             $arret->setRcarence($tab[3]);
             $arret->setPrelSource($ar->calculPrelSourcePrev($arret,$nbjourprev));
+
+            //Mise à jour répartition
+            $ListeCoeff = array("AT","MAT","ATJ","MP","MTT");
+            if(!(in_array($arret->getMotif()->getCourt(),$ListeCoeff)))
+            {
+                $maintien->setNb100($maintien->getNb100() + $arret->getRcent());
+                $maintien->setNb50($maintien->getNb50() + $arret->getRcinquante());
+                if($arret->getRzero() == 0)
+                {
+                    $maintien->setDateFin(clone $arret->getDateOut());
+                }
+                else
+                {
+                    $nbJourMaintenu = $arret->getRcent() + $arret->getRcinquante() ;
+                    $dateFinMaintien = clone $arret->getDateIn()->add(new DateInterval('P'.$nbJourMaintenu.'D'));
+                    $maintien->setDateFin($dateFinMaintien);
+                }
+            }
 
             //calcul du dossier de prévoyance
             $arret->setPrevoyance($ar->calculPrevoyancePrev($arret,$employe,$nbjourprev));

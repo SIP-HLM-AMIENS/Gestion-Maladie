@@ -80,9 +80,15 @@ class Employe
      */
     private $dateDebutAnc;
 
+    /**
+     * @ORM\OneToMany(targetEntity="App\Entity\Maintien", mappedBy="Employe")
+     */
+    private $maintiens;
+
     public function __construct()
     {
         $this->arrets = new ArrayCollection();
+        $this->maintiens = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -239,10 +245,9 @@ class Employe
         return $this->dateSortie;
     }
 
-    public function setDateSortie(\DateTimeInterface $dateSortie): self
-    {
+    public function setDateSortie(\DateTimeInterface $dateSortie = null): self
+    {   
         $this->dateSortie = $dateSortie;
-
         return $this;
     }
 
@@ -254,6 +259,37 @@ class Employe
     public function setDateDebutAnc(\DateTimeInterface $dateDebutAnc): self
     {
         $this->dateDebutAnc = $dateDebutAnc;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Maintien[]
+     */
+    public function getMaintiens(): Collection
+    {
+        return $this->maintiens;
+    }
+
+    public function addMaintien(Maintien $maintien): self
+    {
+        if (!$this->maintiens->contains($maintien)) {
+            $this->maintiens[] = $maintien;
+            $maintien->setEmploye($this);
+        }
+
+        return $this;
+    }
+
+    public function removeMaintien(Maintien $maintien): self
+    {
+        if ($this->maintiens->contains($maintien)) {
+            $this->maintiens->removeElement($maintien);
+            // set the owning side to null (unless already changed)
+            if ($maintien->getEmploye() === $this) {
+                $maintien->setEmploye(null);
+            }
+        }
 
         return $this;
     }

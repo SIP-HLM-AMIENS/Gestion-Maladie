@@ -189,6 +189,7 @@
                                         <thead>
                                             <tr>
                                                 <th>Date Reception</th>
+                                                <th>Type</th>
                                                 <th>Carence</th>
                                                 <th>Nombre jour indemnisés</th>
                                                 <th>Montant</th>
@@ -309,7 +310,7 @@
                     )
                     $('#tableIJSS > tbody').empty()
                     $.each(data.IJSS,function(i) {
-                        $('#tableIJSS > tbody:last-child').append('<tr><td>'+this.dateReception+'</td><td>'+this.carence+'</td><td>'+this.NbJour+'</td><td>'+this.MontantUnitaire+'</tr>');
+                        $('#tableIJSS > tbody:last-child').append('<tr><td>'+this.dateReception+'</td><td>'+this.type+'</td><td>'+this.carence+'</td><td>'+this.NbJour+'</td><td>'+this.MontantUnitaire+'</tr>');
                     }
                     )
             });

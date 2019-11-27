@@ -1,0 +1,58 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="jumbotron">
+    <h1>Ajouter un employé</h1>
+    <hr class="my-4">
+    {{form_start(form)}}
+    <div class="row">
+        <div class="col-2">
+            {{form_row(form.Matricule)}}
+        </div>
+        <div class="col-3">
+            {{form_row(form.Nom)}}
+        </div>
+        <div class="col-3">
+            {{form_row(form.Prenom)}}
+        </div>
+        <div class="col-1">
+            {{form_row(form.sexe)}}
+        </div>
+        <div class="col-3">
+            {{form_row(form.dateNaissance, {'label': 'date de naissance','attr' : {'placeholder': 'Date ...'}})}}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-5">
+            {{form_row(form.poste)}}
+        </div>
+        <div class="col-2">
+            {{form_row(form.Coeff)}}
+        </div>
+        <div class="col-5">
+            {{form_row(form.Service)}}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-4">
+            {{form_row(form.dateEntree, {'label': 'date entrée','attr' : {'placeholder': 'Date ...'}})}}
+        </div>
+        <div class="col-4">
+            {{form_row(form.dateSortie, {'label': 'date sortie','attr' : {'placeholder': 'Date ...'}})}}
+        </div>
+        <div class="col-4">
+            {{form_row(form.dateDebutAnc, {'label': 'date début ancienneté','attr' : {'placeholder': 'Date ...'}})}}
+        </div>
+    </div>
+    <br />
+    <div class="row">
+        <div class="col-2 offset-10">
+            {{form_row(form.save)}}
+        </div>
+    </div>
+
+
+{{form_end(form)}}
+</div>
+
+{% endblock %}
