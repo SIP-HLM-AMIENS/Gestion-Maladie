@@ -513,6 +513,7 @@ class GestionController extends AbstractController
             $ListeCoeff = array("AT","MAT","ATJ","MP","MTT");
             if(!(in_array($arret->getMotif()->getCourt(),$ListeCoeff)))
             {
+                $maintien = $arret->getMaintien();
                 $maintien->setNb100($maintien->getNb100() + $arret->getRcent());
                 $maintien->setNb50($maintien->getNb50() + $arret->getRcinquante());
                 if($arret->getRzero() == 0)
