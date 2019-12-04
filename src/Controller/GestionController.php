@@ -545,7 +545,7 @@ class GestionController extends AbstractController
             
             $manager->persist($arret);
             $manager->persist($prolongation);
-            $manager->persist($maintien);
+            if(isset($maintien))$manager->persist($maintien);
 
             if($form->get('load')->isClicked())
             {
