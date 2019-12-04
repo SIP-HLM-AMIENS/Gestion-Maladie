@@ -734,7 +734,6 @@ class ArretCalcul
         if (!(in_array($arret->getMotif()->getCourt(),$ListeCoeff)))
         {
             $nbjoursIndemnisé = $arret->getMaintien()->getNb100() + $arret->getMaintien()->getNb50();
-            echo("indemnisé : ". $nbjoursIndemnisé);
             if ($nbjoursIndemnisé < 180) // à changer
             {
                 //ouvert - recompter le nombres de jours indemnisés depuis un an
@@ -844,7 +843,6 @@ class ArretCalcul
                     $tabRepartition =  $this->calculRepartition(0,0,$C_Maintien);
                 }
             }
-            echo("valeur : ".$arret->getNbreJour()." ; ".$tabRepartition[0]." ; ".$tabRepartition[1]." ; ".$carence);
             $tab = $this->repartition($arret->getNbreJour(),$tabRepartition[0],$tabRepartition[1],$carence);
 
         }
@@ -902,7 +900,6 @@ class ArretCalcul
             $C_Maintien = $M_100 + $M_50;
            
 
-
             //Calcul de la répartion avec le maintien
             if ($employe->getCoeff()->getCadre())
             {
@@ -949,7 +946,6 @@ class ArretCalcul
                     $tabRepartition =  $this->calculRepartition(0,0,$C_Maintien);
                 }
             }
-            echo("valeur : ".$nbjour." ; ".$tabRepartition[0]." ; ".$tabRepartition[1]." ; ".$carence);
             $tab = $this->repartition($nbjour,$tabRepartition[0],$tabRepartition[1],$carence);
 
         }
@@ -957,7 +953,6 @@ class ArretCalcul
         {
             $tab = [$nbjour,0,0,0];
         }
-        echo("<\br> Tab: ".$tab[0]. ";".$tab[1].";".$tab[2].";".$tab[3]);
         return $tab;
     }
 

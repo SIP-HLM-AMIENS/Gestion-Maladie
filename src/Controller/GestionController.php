@@ -503,6 +503,7 @@ class GestionController extends AbstractController
 
             //calcul de la répartition
             $tab = $ar->calculRepartitionProlongation($arret,$employe,$lda, $nbjourprev);
+            
             $arret->setRcent($tab[0]);
             $arret->setRcinquante($tab[1]);
             $arret->setRzero($tab[2]);
@@ -514,8 +515,18 @@ class GestionController extends AbstractController
             if(!(in_array($arret->getMotif()->getCourt(),$ListeCoeff)))
             {
                 $maintien = $arret->getMaintien();
-                $maintien->setNb100($maintien->getNb100() + $arret->getRcent());
-                $maintien->setNb50($maintien->getNb50() + $arret->getRcinquante());
+                $A_100 = $arret->getRcent();
+                $A_50 = $arret->getRcinquante();
+                $AA_100 = $ancienArret->getRcent();
+                $AA_50 = $ancienArret->getRcinquante();
+                $M_100 = $arret->getMaintien()->getNb100();
+                $M_50 = $arret->getMaintien()->getNb50();
+
+                //Mise à jour du maintien ( Maintien - ancienArret) + nouvel arret
+                $maintien->setNb100(($M_100-$AA_100) + $A_100);
+                $maintien->setNb50(($M_50 - $AA_50) + $A_50);
+
+
                 if($arret->getRzero() == 0)
                 {
                     $maintien->setDateFin(clone $arret->getDateOut());
@@ -534,6 +545,7 @@ class GestionController extends AbstractController
             
             $manager->persist($arret);
             $manager->persist($prolongation);
+            $manager->persist($maintien);
 
             if($form->get('load')->isClicked())
             {
