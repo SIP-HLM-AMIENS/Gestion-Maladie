@@ -803,7 +803,7 @@ class ArretCalcul
                 //fermé - Pas de maintient
                 $C_Maintien = 180;
             }
-            echo($employe->anciennete);
+
             //Calcul de la répartion avec le maintien
             if ($employe->getCoeff()->getCadre())
             {
