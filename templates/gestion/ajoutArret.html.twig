@@ -19,48 +19,80 @@
         {{form_row(form.motif, {'label': 'Type'})}}
         {{form_row(form.load)}}
 
-        </div>
+    </div>
 
         {% if employe is defined %}
-            <div class="row">
-                <div class="col-8">
-                    <h3>Repartition pour l'arrêt en cours</h3>
-                    <table class="table table-bordered">
-                        <thead class="thead-dark">
-                            <tr>
-                                <th>100%</th>
-                                <th>50%</th>
-                                <th>Ø</th>
-                                <th>Carence</th>
-                                <th>Prel Source</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>{{ arret.rcent }}</td>
-                                <td>{{ arret.rcinquante }}</td>
-                                <td>{{ arret.rzero }}</td>
-                                <td>{{ arret.rcarence }}</td>
-                                <td>{{ arret.prelSource }}</td> 
-                            </tr>
-                        </tbody>
-                    </table>
+            <div class="jumbotron">
+                <div class="col-12">
+                        <h3>Repartition pour l'arrêt en cours</h3>
+                        <table class="table table-bordered">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th>100%</th>
+                                    <th>50%</th>
+                                    <th>Ø</th>
+                                    <th>Carence</th>
+                                    <th>Prel Source</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>{{ arret.rcent }}</td>
+                                    <td>{{ arret.rcinquante }}</td>
+                                    <td>{{ arret.rzero }}</td>
+                                    <td>{{ arret.rcarence }}</td>
+                                    <td>{{ arret.prelSource }}</td> 
+                                </tr>
+                            </tbody>
+                        </table>
+                        {% if maintien is defined %}
+                        <h3>Maintien</h3>
+                        <table class="table table-bordered">
+                            <thead class="thead-dark">
+                                <tr>
+                                    <th></th>
+                                    <th>100%</th>
+                                    <th>50%</th>
+                                    <th>Ø</th>
+                                    <th>Carence</th>
+                                    <th>Prel Source</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Avant</td>
+                                    <td>{{ arret.maintien.nb100 }}</td>
+                                    <td>{{ arret.maintien.nb50 }}</td>
+                                    <td>{{ arret.rzero }}</td>
+                                    <td>{{ arret.rcarence }}</td>
+                                    <td>{{ arret.prelSource }}</td> 
+                                </tr>
+                                <tr>
+                                    <td>Apres</td>
+                                    <td>{{ arret.rcent }}</td>
+                                    <td>{{ arret.rcinquante }}</td>
+                                    <td>{{ arret.rzero }}</td>
+                                    <td>{{ arret.rcarence }}</td>
+                                    <td>{{ arret.prelSource }}</td> 
+                                </tr>
+                            </tbody>
+                        </table>
+                        {% endif %}
                 </div>
                 <div class="col-4">
-                    <p> Anciennete = {{ employe.anciennete }} </p>
+                    <p> Anciennete = {{ employe.anciennete }} mois </p>
                     <p> Coeffiecient = {{ employe.coeff.nom }}</p>
-                    <p> Nombre de jour = {{ arret.nbreJour }} </p>
-                    <p> Nombre de jour maintenu depuis 1 an = ?</p>
+                    <p> Nombre de jour = {{ arret.nbreJour }}</p>
                     {% if arret.prevoyance %}
                         <p> Dossier prévoyance = <b>Oui</b></p>
                     {% else %}
                         <p> Dossier prévoyance = Non</p>
                     {% endif %}
                 </div>
-            </div>
-            <div class="section">
-                <button type="submit" class="btn btn-danger">Annuler</button>
-                {{form_row(form.save)}}
+                <div class='offset-10 col-2'>
+                    {{form_row(form.save)}}
+                    <button type="submit" class="btn btn-danger">Annuler</button>
+                </div>
             </div>
         {% endif %}
         {{form_end(form)}}

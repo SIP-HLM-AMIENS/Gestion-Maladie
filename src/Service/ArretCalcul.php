@@ -602,7 +602,15 @@ class ArretCalcul
 
         if($carence)
         {
-            array_push($tab,3);
+            if($nbjour < 3 )
+            {
+                array_push($tab,$nbjour);
+            }
+            else
+            {
+                array_push($tab,3);
+            }
+
         }
         else
         {
@@ -734,6 +742,7 @@ class ArretCalcul
         if (!(in_array($arret->getMotif()->getCourt(),$ListeCoeff)))
         {
             $nbjoursIndemnisé = $arret->getMaintien()->getNb100() + $arret->getMaintien()->getNb50();
+            
             if ($nbjoursIndemnisé < 180) // à changer
             {
                 //ouvert - recompter le nombres de jours indemnisés depuis un an
@@ -788,15 +797,13 @@ class ArretCalcul
                 $arret->getMaintien()->setNb100($C_100);
                 $arret->getMaintien()->setNb50($C_50);
                 $C_Maintien = $C_100 + $C_50;
-                echo("Maintenu :".$C_Maintien);
             }
             else
             {
                 //fermé - Pas de maintient
                 $C_Maintien = 180;
             }
-
-
+            echo($employe->anciennete);
             //Calcul de la répartion avec le maintien
             if ($employe->getCoeff()->getCadre())
             {
@@ -899,7 +906,6 @@ class ArretCalcul
 
             $C_Maintien = $M_100 + $M_50;
            
-
             //Calcul de la répartion avec le maintien
             if ($employe->getCoeff()->getCadre())
             {

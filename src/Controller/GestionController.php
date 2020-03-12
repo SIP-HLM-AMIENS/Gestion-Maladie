@@ -249,7 +249,7 @@ class GestionController extends AbstractController
             
             //calcul de l'anciennete de l'employé
             $employe = $arret->getEmploye();
-            $employe->anciennete = $ar->diffMois($employe->getDateEntree(),new \DateTime);
+            $employe->anciennete = $ar->diffMois($employe->getDateEntree(),$arret->getDateIn());
 
             //Recherche des derniers arrets pour le calcul de la carence
             $am = $this->getDoctrine()->getRepository(Arret::class);
@@ -257,20 +257,15 @@ class GestionController extends AbstractController
             $lda = $am->findArretBefore24($employe->getId(),$debut);
             //$arret->setRcarence();
 
-            //Calcul pour la recherche du maintien
-            $mr = $this->getDoctrine()->getRepository(Maintien::class);
-            $dernierMaintien = $mr->findLast($employe);
-            $dateLimite = clone $arret->getDateIn(); 
-            $dateLimite->sub(new DateInterval('P1Y'));// - 1 an
-            if($dernierMaintien == null)
+            $ListeCoeff = array("AT","MAT","ATJ","MP","MTT");
+            if(!(in_array($arret->getMotif()->getCourt(),$ListeCoeff)))
             {
-                $maintien  = new Maintien();
-                $maintien->setDateCreation(clone $arret->getDateIn());
-                $maintien->setEmploye($employe);
-            }
-            else
-            {
-                if($dernierMaintien->getDateFin()<= $dateLimite)
+                //Calcul pour la recherche du maintien
+                $mr = $this->getDoctrine()->getRepository(Maintien::class);
+                $dernierMaintien = $mr->findLast($employe);
+                $dateLimite = clone $arret->getDateIn(); 
+                $dateLimite->sub(new DateInterval('P1Y'));// - 1 an
+                if($dernierMaintien == null)
                 {
                     $maintien  = new Maintien();
                     $maintien->setDateCreation(clone $arret->getDateIn());
@@ -278,12 +273,21 @@ class GestionController extends AbstractController
                 }
                 else
                 {
-                    //Continuation du maintien
-                    $maintien = $dernierMaintien;
+                    if($dernierMaintien->getDateFin()<= $dateLimite)
+                    {
+                        $maintien  = new Maintien();
+                        $maintien->setDateCreation(clone $arret->getDateIn());
+                        $maintien->setEmploye($employe);
+                    }
+                    else
+                    {
+                        //Continuation du maintien
+                        $maintien = $dernierMaintien;
+                    }
                 }
+                
+                $arret->setMaintien($maintien);
             }
-            
-            $arret->setMaintien($maintien);
 
             //calcul de la répartition
             //$tab = $ar->calculRepartitionAvecMaintien($employe,$arret,$lda);
@@ -296,7 +300,6 @@ class GestionController extends AbstractController
             $arret->setPrelSource($ar->calculPrelSource($arret));
 
             //Mise à jour répartition
-            $ListeCoeff = array("AT","MAT","ATJ","MP","MTT");
             if(!(in_array($arret->getMotif()->getCourt(),$ListeCoeff)))
             {
                 $maintien->setNb100($maintien->getNb100() + $arret->getRcent());
@@ -313,12 +316,13 @@ class GestionController extends AbstractController
                 }
             }
 
+
             //calcul si présence d'un dossier prévoyance
             $arret->setPrevoyance($ar->calculPrevoyance($arret,$employe));
 
             //Persistance de l'arret
             $manager->persist($prolongation);
-            $manager->persist($maintien);
+            if(isset($maintien))$manager->persist($maintien);
             $manager->persist($arret);
 
 
@@ -328,7 +332,7 @@ class GestionController extends AbstractController
                 [
                     'form' => $form->createView(),
                     'arret' => $arret,
-                    'employe' => $arret->getEmploye()
+                    'employe' => $arret->getEmploye(),
                 ]);
             }
             elseif($form->get('save')->isClicked())
@@ -494,7 +498,7 @@ class GestionController extends AbstractController
 
             //calcul de l'anciennete de l'employé
             $employe = $arret->getEmploye();
-            $employe->anciennete = $ar->diffMois($employe->getDateEntree(),new \DateTime);
+            $employe->anciennete = $ar->diffMois($employe->getDateEntree(),$arret->getDateIn());
 
             //Recherche des derniers arret pour le calcul de la carence
             $am = $this->getDoctrine()->getRepository(Arret::class);
@@ -505,6 +509,7 @@ class GestionController extends AbstractController
             $tab = $ar->calculRepartitionProlongation($arret,$employe,$lda, $nbjourprev);
             
             $arret->setRcent($tab[0]);
+            echo ($tab[0]);
             $arret->setRcinquante($tab[1]);
             $arret->setRzero($tab[2]);
             $arret->setRcarence($tab[3]);
