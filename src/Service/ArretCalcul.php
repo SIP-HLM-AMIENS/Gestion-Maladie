@@ -716,7 +716,7 @@ class ArretCalcul
     public function calculRepartitionCreation($arret,$employe,$lda)
     {
         $ListeCoeff = array("AT","MAT","ATJ","MP","MTT");
-        $ListeCoeffCarence = array("AT","MAT","HOS","ATJ","MP","MTT");
+        $ListeCoeffCarence = array("AT","MAT","HOS","ATJ","MP","MTT","COV");
 
         //calcul de la carence
         //Pas de carence si Arret travail et MAT
@@ -865,7 +865,7 @@ class ArretCalcul
     public function calculRepartitionProlongation($arret,$employe,$lda, $nbjour)
     {
         $ListeCoeff = array("AT","MAT");
-        $ListeCoeffCarence = array("AT","MAT","HOS");
+        $ListeCoeffCarence = array("AT","MAT","HOS","COV");
 
         //calcul de la carence
         //Pas de carence si Arret travail et MAT
